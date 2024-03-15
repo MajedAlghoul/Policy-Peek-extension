@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Policy Peek",
-  "description": "Policy Peek: A privacy policy analysis extension.",
+  "description": "A privacy policy analysis extension.",
   "version": "1.0",
   "action": {
     "default_popup": "pages/popup.html",
@@ -20,7 +20,9 @@
   "permissions": [
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
-    "storage"
+    "storage",
+    "tabs",
+    "webRequest"
   ],
   "host_permissions": [
     "<all_urls>"

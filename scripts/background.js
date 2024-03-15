@@ -3,8 +3,7 @@ let blockRule = {
   "priority": 1,
   "action": {
     "type": "redirect",
-    "redirect": { "extensionPath": "/pages/loading.html" }
-
+    "redirect": { "url": `${chrome.runtime.getURL('pages/loading.html')}` }
   },
   "condition": {
     "urlFilter": "*",
@@ -22,7 +21,7 @@ chrome.webRequest.onBeforeRequest.addListener(
   { urls: ['<all_urls>'] }
 );
 
-chrome.storage.sync.set({ whitelist: ['apple.com', 'microsoft.com'] }, function () {
+chrome.storage.sync.set({ whitelist: ['apple.com', 'microsoft.com',"google.com"] }, function () {
   console.log('Whitelist saved');
 });
 

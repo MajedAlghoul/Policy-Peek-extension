@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Policy Peek",
+  "description": "Policy Peek: A privacy policy analysis extension.",
+  "version": "1.0",
+  "action": {
+    "default_popup": "pages/popup.html",
+    "default_icon": {
+      "16": "icons/favicon16.png",
+      "32": "icons/favicon32.png"
+    }
+  },
+  "icons": {
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "scripts/background.js"
+  },
+  "permissions": [
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ]
+}

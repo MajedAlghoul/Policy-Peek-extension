@@ -3,12 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../styles/popup.css">
     <title>Document</title>
 </head>
 <body>
-    <div class="w">
-        asdsadad
+    <div id="bigContainer">
+        <div id="mainContainer">
+            <div id="defaultContainer">
+                <div id="topBarContainer">
+                    <a target="_blank" href="../pages/settings.html"><img style="width: 23px" class="topBarChild" src="../images/settings.png" alt=""></a>
+                    <div id="searchBarContainer">
+                        <img src="../images/search.png" alt="" class="searchChildren">
+                        <p class="searchChildren">Search in policy</p>
+                    </div>
+                    <a id="profileButton" href=""><img class="topBarChild" src="../images/profile.svg" alt=""></a>
+                </div>
+                <div id="contentContainer">
+                    <div id="contentResultContainer">
+    
+                    </div>
+                    <div id="contentDisplayContainer">
+    
+                    </div>
+                </div>
+            </div>
+            <div id="profileContainer">
+                <div id="accountContainer">
+                    <div id="nvBar">
+                        <a id="xButton" href=""><img style="width: 15px;height:15px"  src="../images/x.png" alt=""></a>
+                        <p id="pageTitleProfile">Profile</p>
+                        <a href="" id="redButtonAnch"><div id="redButton">Sign Out</div></a>
+                    </div>
+                    <div id="accountDisplay">
+    
+                    </div>
+                </div>
+                <div id="sessionContainer">
+    
+                </div>
+            </div>
+        </div>
+        <div id="bottomBarContainer">
+            <div id="summaryButtonContainer" class="bottomBarButtons">
+                <img style="width: 16px" src="../images/summary.png" alt="summary_icon" class="bottomBarChild">
+                <p class="bottomBarChild">Summary</p>
+            </div>
+            <div id="alignmentButtonContainer" class="bottomBarButtons">
+                <img style="width: 16px" src="../images/alignment.png" alt="summary_icon" class="bottomBarChild">
+                <p class="bottomBarChild">Alignment</p>
+            </div>
+            <div id="aboutButtonContainer" class="bottomBarButtons">
+                <img style="width: 16px" src="../images/info.png" alt="summary_icon" class="bottomBarChild">
+                <p class="bottomBarChild">Info</p>
+            </div>
+        </div>
     </div>
+    <script src="../scripts/popup.js"></script>
 </body>
 </html>

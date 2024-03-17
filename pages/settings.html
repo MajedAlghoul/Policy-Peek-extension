@@ -1,12 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Policy Peek Settings</title>
+    <link rel="stylesheet" href="../styles/settings.css">
 </head>
+
 <body>
-<div>
-    hello
-</div>
+    <div id=bigContainer>
+        <div id="bigTitleContainer">
+            <div id="innerTitleContainer" class="pairContainers">
+                <img id="bigIcon" width="50px" height="50px" src="../icons/icon128.png" alt="">
+                <p id="bigTitle">Settings</p>
+            </div>
+        </div>
+        <div id="bigSeparator"></div>
+        <div id="bigContentContainer">
+            <div id="sideMenuContainer">
+                <ul>
+                    <li>
+                        <a href="#" data-content="settings/general.html">
+                            <div class="pairContainers">
+                                <img class="menuIcons" src="../images/settings.png" alt="">
+                                <p class="menuText">General</p>
+                            </div>
+                        </a>
+
+                    </li>
+                    <li>
+                        <a href="#" data-content="settings/account.html">
+                            <div class="pairContainers">
+                                <img class="menuIcons" src="../images/settings.png" alt="">
+                                <p class="menuText">Account & Sessions</p>
+                            </div>
+                        </a>
+
+                    </li>
+                    <li>
+                        <a href="#" data-content="settings/preferences.html">
+                            <div class="pairContainers">
+                                <img class="menuIcons" src="../images/settings.png" alt="">
+                                <p class="menuText">Privacy Preferences</p>
+                            </div>
+                        </a>
+
+                    </li>
+                    <li>
+                        <a href="#" data-content="settings/control.html">
+                            <div class="pairContainers">
+                                <img class="menuIcons" src="../images/settings.png" alt="">
+                                <p class="menuText">Parental Control</p>
+                            </div>
+                        </a>
+
+                    </li>
+                    <li>
+                        <a href="#" data-content="settings/about.html">
+                            <div class="pairContainers">
+                                <img class="menuIcons" src="../images/settings.png" alt="">
+                                <p class="menuText">About</p>
+                            </div>
+                        </a>
+
+                    </li>
+                </ul>
+            </div>
+            <div id="contentContainer">
+                <div id="innerContentContainer">
+                    <p id="contentTitle">
+                        General
+                    </p>
+                    <div id="actualContentContainer">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../scripts/settings.js"></script>
 </body>
+
 </html>

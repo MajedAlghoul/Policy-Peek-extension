@@ -1,0 +1,166 @@
+#innner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+#preferencesContainer {
+    background-color: #1c1c1e;
+    width: 100%;
+    height: 107%;
+    border-radius: 10px;
+}
+
+#highPContainer {
+    background-color: #202e19;
+    color: #ABFF69;
+    border: 1px solid #bfff8d;
+}
+
+#midPContainer {
+    background-color: #2e2c19;
+    color: #FFE500;
+    border: 1px solid #ffea2c;
+}
+
+#lowPContainer {
+    background-color: #173d3c;
+    color: #00DDD0;
+    border: 1px solid #00ddd0;
+}
+
+#customPContainer {
+    background-color: #2e2119;
+    color: #ff6c00;
+    border: 1px solid #ff8c3a;
+}
+
+.prefBoxes {
+    margin-top: 7%;
+    width: 86%;
+    min-height: 10vh;
+    border-radius: 10px;
+}
+
+.shape {
+    min-height: 14vh;
+    width: 20px;
+    -moz-transform: skew(-15deg);
+    -webkit-transform: skew(-15deg);
+    transform: skew(-15deg);
+    margin-left: 5px;
+}
+
+.prefDesc {
+    font-size: 1vw;
+    width: 35%;
+    text-align: left;
+}
+
+.prefOk {
+    width: 2vw;
+    height: 2vw;
+    margin-left: 20px;
+    margin-right: 20px;
+    visibility: hidden;
+}
+
+.stripeContainer {
+    min-height: 10vh;
+    display: flex;
+    margin-right: 20px;
+    margin-bottom: 0;
+}
+
+#highShape {
+    background-color: #abff69;
+}
+
+#midShape {
+    background-color: #ffe500;
+}
+
+#lowShape {
+    background-color: #00ddd0;
+}
+
+#customShape {
+    background-color: #ff6c00;
+}
+
+.prefName {
+    font-size: 2.1vw;
+    width: 30%;
+    text-align: left;
+}
+
+.prefButton {
+    width: 100%;
+    min-height: 10vh;
+    padding: 0;
+    background: none;
+    border: none;
+}
+
+.innerprefBoxes {
+    width: 100%;
+    min-height: 10vh;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: column;
+}
+
+.innerTopPrefBoxes {
+    width: 100%;
+    min-height: 10vh;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0;
+}
+
+.innerSep1 {
+    width: 100%;
+    height: 2px;
+}
+
+.prefExpArea {
+    width: 100%;
+    padding-bottom: 10px;
+}
+#prefExpArea2 {
+    min-height: 80vh;
+}
+
+.prefExpArea1 {
+    width: 100%;
+    
+}
+
+.innerTitle1 {
+    font-size: 1.3vw;
+    width: 60%;
+    margin-left: 30px;
+    margin-top: 10px;
+    text-align: left;
+    margin-bottom: 7px;
+}
+
+.innerSep2 {
+    width: calc(100% - 30px);
+    height: 1px;
+    margin-left: 30px;
+    margin-right: 0;
+    margin-bottom: 10px;
+}
+.freeSelectionBox{
+    width: calc(100% - 30px);
+    margin-left: 30px;
+    margin-right: 0;
+    display: flex;
+    flex-wrap: wrap;
+}

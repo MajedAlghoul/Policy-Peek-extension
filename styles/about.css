@@ -1,0 +1,21 @@
+.versionGoContainer{
+    display: flex;
+}
+#versionGoImg{
+    margin-top: 3px;
+    margin-left: 10px;
+}
+.innerContainer{
+    margin: 20px;
+}
+.versionText{
+    align-items:start;
+    margin-bottom: 10px;
+}
+.aboutContainers{
+    background-color: #1c1c1e;
+    display: flex;
+    border-radius: 10px;
+    margin: 0;
+    flex-direction: column;
+}

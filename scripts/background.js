@@ -2,7 +2,8 @@ let blockRule = {
   "id": 5,
   "priority": 1,
   "action": {
-    "type": "allow"
+    "type": "redirect",
+    "redirect": { "url": `${chrome.runtime.getURL('pages/loading.html')}` }
   },
   "condition": {
     "urlFilter": "*",

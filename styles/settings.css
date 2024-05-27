@@ -1,16 +1,18 @@
-@media screen and (min-width: 1050px) {
-    body{
-        margin: 0;
-        font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #161616;
+body{
+    margin: 0;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #161616;
 
-    }
+}
+
+@media screen and (min-width: 1050px) {
     #bigContainer{
         width: 100vw;
         height: 100vh;
         color: white;
         display: flex;
         flex-direction: column;
+        position: absolute;
     }
     ul{
         list-style: none;
@@ -128,4 +130,94 @@
 
 #contentContainer::-webkit-scrollbar-thumb:hover {
     background-color: #555;
+}
+
+#layerCoordinator{
+    position: relative;
+}
+#OnTopContainer{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    background-color: #1c1c1e;
+    border: 1px solid #ffffff10;
+    border-top: 1px solid #ffffff20;
+    width: 30vw;
+    height: 52vh;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    color: #ccc;
+}
+#glassOnTop{
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #00000050;
+    width: 100vw;
+    height: 100vh;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+#onTopFooter{
+    background-color: #2a2a2b;
+    height: 20%;
+    width: 100%;
+    border-radius: 0 0 9px 9px;
+    border-top: 1px solid #ffffff30;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+#onTopBody{
+    height: 80%;
+    width: 100%;
+    border-radius: 10px 10px 0 0;
+}
+
+#onTopBodyHead{
+    width: 100%;
+    height: 15%;
+    border-radius: 9px 9px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #ccc;
+    font-size: 14px;
+}
+
+#onTopInnerBody{
+    width: 100%;
+    height: 85%;
+}
+#placeHolder{
+    width: 10%;
+}
+
+#cancelB{
+    margin-right: 20px;
+}
+#onTopInnerBody{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.siteInput{
+    width: 100%;
+    height: 6vh;
+    background-color: #2a2a2b;
+    border: none;
+    border-radius: 5px;
+}
+.inputLabel{
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    width: 60%;
+    margin-top: 20px;
 }

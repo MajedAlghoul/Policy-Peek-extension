@@ -15,11 +15,13 @@
     "128": "icons/icon128.png"
   },
   "background": {
+    "type": "module",
     "service_worker": "scripts/background.js"
   },
   "permissions": [
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
+    "declarativeNetRequestWithHostAccess",
     "storage",
     "tabs",
     "webRequest"

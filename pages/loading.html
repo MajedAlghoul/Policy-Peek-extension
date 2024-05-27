@@ -1,12 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Loading</title>
+    <link rel="stylesheet" href="../styles/loading.css">
 </head>
+
 <body>
-    <div>
-        <a href="https://adgkpckcpibpoocdcaklinkjaddaocem/www.youtube.com">lksdl</a>
+    <div id="bigContainer">
+        <div id="topContainer">
+            <div id="topTitleContainer">
+                <div>
+                    <img style="margin-top: 30px; margin-right:30px;" id="favicon" src="" alt="" width="70px" height="70px">
+                </div>
+                <div id="bigTitle" style="font-size: 80px;">
+                </div>
+            </div>
+            <div id="topDesc" style="font-size: 25px; margin-top:10px">
+                Checking Website's Privacy Policy
+            </div>
+        </div>
+        <div id="midContainer">
+            <div id="loadingBox">
+                <div class="loader">
+
+                </div>
+                <div style="font-size: 22px;">
+                    Analyzing Privacy Policy
+                </div>
+                <div style="margin-right: 20px;">
+                    <img src="../icons/icon128.png" alt="" style="width:46px">
+                </div>
+            </div>
+        </div>
+        <div id="bottomContainer">
+            <div style="font-size: 22px;">
+                <span id="littleTextSpan"></span> will load in <span id="littleCounterSpan"></span>...
+            </div>
+        </div>
     </div>
+    <script type="module" src="../scripts/loading.js"></script>
 </body>
+
 </html>

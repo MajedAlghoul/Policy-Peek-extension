@@ -213,6 +213,8 @@ body{
     background-color: #2a2a2b;
     border: none;
     border-radius: 5px;
+    color: white;
+    margin-top: 5px;
 }
 .inputLabel{
     font-size: 16px;
@@ -220,4 +222,17 @@ body{
     flex-direction: column;
     width: 60%;
     margin-top: 20px;
+}
+
+.genericButtons{
+    background-color: #1c1c1e;
+    color: white;
+    outline: none;
+    border: 1px solid #ffffff15;
+    border-top: 1px solid #ffffff20;
+    border-radius: 6px;
+    width: 4.5vw;
+    height: 4.2vh;
+    margin-left: 5px;
+    font-size: 1vw;
 }

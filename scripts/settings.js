@@ -26,3 +26,4 @@ for (let i = 0; i < listItems.length; i++) {
         lastClicked = this;
     });
 }
+listItems[0].click();

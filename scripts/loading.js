@@ -1,20 +1,16 @@
-chrome.storage.local.get('currentURL', function (result) {
+import { pullPreferencesStorage, pushSessionWhiteListStorage, updateRules } from './Utility.js';
+import { trimUrl } from './Utility.js';
+chrome.storage.local.get('currentURL', async function (result) {
   const currentURL = result.currentURL;
   if (currentURL) {
-    modifyPage(currentURL);
+    await modifyPage(currentURL);
+    await sendPolicyRequest(currentURL);
   }
 });
 
-function modifyPage(currentURL) {
-  let temp = currentURL;
-  temp = temp.split('//')[1];
-  if (temp.charAt(temp.length - 1) === '/') {
-    temp = temp.slice(0, temp.length - 1);
-  }
-  let x = temp.split('.');
-  if (x.length > 2) {
-    temp = x[1] + '.' + x[2];
-  }
+async function modifyPage(currentURL) {
+  let temp = trimUrl(currentURL);
+
   let selector = document.getElementById('bigTitle');
   selector.textContent = temp;
   selector = document.getElementById('littleTextSpan');
@@ -36,3 +32,49 @@ function modifyPage(currentURL) {
   const faviconImg = document.getElementById('favicon');
   faviconImg.src = `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${currentURL}&size=256`;
 }
+
+
+
+async function sendPolicyRequest(currUrl) {
+  setTimeout(async function () {
+    let resp = {
+      match: false,
+      policyAnalysis: ['dsd-element', 'dci-element']
+    };
+    if (resp.match) {
+      await pushSessionWhiteListStorage([trimUrl(currUrl)]);
+      console.log(trimUrl(currUrl));
+      await updateRules();
+      window.location.replace(currUrl);
+    } else {
+      chrome.storage.local.set({ sitepolicy: resp.policyAnalysis }, function () {
+        console.log('Site Policy is saved in local storage');
+      });
+      window.location.replace('../pages/block.html');
+    }
+  }, 3000);
+
+}
+
+/*async function sendPolicyRequest(currUrl) {
+  const url = 'https://api.example.com/data';
+  
+  let prefs=await pullPreferencesStorage();
+
+  const data = {
+      url: currUrl,
+      preferences: prefs
+  };
+  
+  try {
+      const response = await axios.post(url, data, {
+          headers: {
+              'Content-Type': 'application/json'
+          }
+      });
+      
+      console.log(response.data);
+  } catch (error) {
+      console.error('There was a problem with the axios operation:', error);
+  }
+}*/

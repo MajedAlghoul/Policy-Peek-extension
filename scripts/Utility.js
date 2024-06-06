@@ -485,3 +485,16 @@ export async function removeRulesCounter() {
         console.error(error);
     }
 }
+//========================================================================================================
+export function trimUrl(currUrl) {
+    let temp = currUrl;
+    temp = temp.split('//')[1];
+    if (temp.charAt(temp.length - 1) === '/') {
+      temp = temp.slice(0, temp.length - 1);
+    }
+    let x = temp.split('.');
+    if (x.length > 2) {
+      temp = x[1] + '.' + x[2];
+    }
+    return temp;
+  }

@@ -42,3 +42,19 @@
     margin-top: 10px;
     margin-bottom: 0; 
 }
+
+.delTag{
+    background-color: #311617;
+    border-radius: 5px;
+    padding: 1px;
+    padding-right: 4px;
+    padding-left: 4px;
+}
+
+.addTag{
+    background-color: #1a3017;
+    border-radius: 5px;
+    padding: 1px;
+    padding-right: 4px;
+    padding-left: 4px;
+}

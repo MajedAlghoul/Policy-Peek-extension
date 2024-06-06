@@ -5,7 +5,7 @@ loading();
 async function loading() {
   //await utility.removeAllRules();
   //await utility.removeWhiteListStorage();
-  //await utility.removeSessionWhiteListStorage();
+  await utility.removeSessionWhiteListStorage();
   //await utility.removeRulesCounter();
 
   await utility.updateRules();

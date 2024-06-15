@@ -329,7 +329,7 @@ export async function updateRules() {
     await removeRulesCounter();
     let wl = await pullWhiteListStorage();
     let swl = await pullSessionWhiteListStorage();
-    let sWMix=[];
+    let sWMix = [];
     let rules = [];
 
     if (wl && wl.length !== 0) {
@@ -383,6 +383,7 @@ export async function removeAllRules() {
 async function getPreLoadRules() {
     let id1 = await getRulesCounter();
     let id2 = await getRulesCounter();
+    let id3 = await getRulesCounter();
     let temp = [];
     temp.push({
         "id": id1,
@@ -404,6 +405,17 @@ async function getPreLoadRules() {
         },
         "condition": {
             "urlFilter": `*t3.gstatic.com/*`,
+            "resourceTypes": ["main_frame", "sub_frame", "stylesheet", "script", "media", "font", "image", "ping", "csp_report", "websocket", "webbundle", "object", "xmlhttprequest", "other"]
+        }
+    });
+    temp.push({
+        "id": id3,
+        "priority": 2,
+        "action": {
+            "type": "allow"
+        },
+        "condition": {
+            "urlFilter": `file:///*`,
             "resourceTypes": ["main_frame", "sub_frame", "stylesheet", "script", "media", "font", "image", "ping", "csp_report", "websocket", "webbundle", "object", "xmlhttprequest", "other"]
         }
     });
@@ -489,12 +501,190 @@ export async function removeRulesCounter() {
 export function trimUrl(currUrl) {
     let temp = currUrl;
     temp = temp.split('//')[1];
-    if (temp.charAt(temp.length - 1) === '/') {
-      temp = temp.slice(0, temp.length - 1);
+    if (temp.includes('/')) {
+        temp = temp.split('/')[0];
     }
+    //if (temp.charAt(temp.length - 1) === '/') {
+    //    temp = temp.slice(0, temp.length - 1);
+    //}
     let x = temp.split('.');
     if (x.length > 2) {
-      temp = x[1] + '.' + x[2];
+        temp = x[1] + '.' + x[2];
     }
     return temp;
-  }
+}
+//======================================================================================================
+function chkSP() {
+    return new Promise((resolve, reject) => {
+        chrome.storage.local.get(['sitepolicy'], function (result) {
+            if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
+
+export async function pullSitePolicyStorage() {
+    try {
+        let result = await chkSP();
+        //console.log('chkk'+(result.sitepolicy)['reddit.com'].siteRank);
+        if (!result.sitepolicy) {
+            await pushSitePolicyStorage({});
+            result = await chkSP();
+        }
+        return result.sitepolicy;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function findSitePolicyStorage(siteUrl) {
+    try {
+        let result = await chkSP();
+        //console.log('finding'+Object.keys(result.sitepolicy).length);
+        if (!result.sitepolicy) {
+            await pushSitePolicyStorage({});
+            result = {};
+        }
+        else {
+            console.log('search' + siteUrl + Object.keys(result.sitepolicy)[0]);
+            let x = result.sitepolicy[siteUrl];
+            if (x) {
+                console.log('slipped');
+                result = x;
+            } else {
+                result = {};
+            }
+        }
+        return result;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function pushSitePolicyStorage(bit) {
+    try {
+        //console.log('pushing'+bit['reddit.com'].siteRank+Object.keys(bit)[0]);
+        let toPush;
+        if (Object.keys(bit).length === 0) {
+            toPush = bit;
+        } else {
+            let tmp = await pullSitePolicyStorage();
+            let theKey = Object.keys(bit)[0];
+            //console.log('answer'+ theKey in tmp);
+            if (tmp && !(theKey in tmp)) {
+                console.log('do we get in?');
+                tmp[theKey] = bit[theKey];
+            }
+            toPush = tmp;
+            //console.log(typeof tmp)
+            //console.log('x2pushing'+tmp['reddit.com'].siteRank+Object.keys(bit)[0]);
+        }
+        await chrome.storage.local.set({ ['sitepolicy']: toPush }, function () {
+            console.log('Site Policy Storage Has Been Pushed');
+        });
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function removeSitePolicyStorage() {
+    try {
+        await chrome.storage.local.remove(['sitepolicy'], function () {
+            console.log('Site Policy Storage Has Been Deleted');
+        });
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function removeSpecificSitePolicyStorage(item) {
+    try {
+        let toPush;
+        if (!item || item.length === 0) {
+            toPush = item;
+        } else {
+            let tmp = await pullSitePolicyStorage();
+            if (item in tmp) {
+                delete tmp[item];
+                console.log('Item Founed And Will Be Removed From The Site Policy Storage');
+            }
+            toPush = tmp;
+        }
+        await chrome.storage.local.set({ ['sitepolicy']: toPush }, function () {
+            console.log('the item: ' + item + ' Has Been Removed From The Site Policy Storage');
+        });
+    } catch (error) {
+        console.error(error);
+    }
+}
+//===========================================================================================================
+export async function makeRequest(wurl) {
+
+    const url = 'https://api.example.com/data';
+
+    let prefs = await pullPreferencesStorage();
+
+    const data = {
+        url: wurl,
+        preferences: prefs
+    };
+
+    try {
+        const response = await axios.post(url, data, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log(response.data);
+        return response;
+    } catch (error) {
+        console.error('There was a problem with the axios operation:', error);
+    }
+}
+//===========================================================================================================
+
+export function fillLists(analysis,divv){
+    const childElements = divv.querySelectorAll('.summaryBoxInnerActual');
+            
+    const dBox=childElements[0];
+    const pBox=childElements[1];
+    const rBox=childElements[2];
+
+    for (let i = 0; i < analysis.length; i++) {
+        console.log(analysis[i]+" rotate");
+        if (!(Number.isInteger(analysis[i]))) {
+            console.log("confusedd");
+            let temp=document.createElement(analysis[i]);
+            if(analysis[i].charAt(0) === 'd'){
+                divv.querySelectorAll('#summaryDataBox')[0].style.display = 'flex';
+                dBox.append(temp);
+                let tmp=temp.shadowRoot.childNodes[3].getElementsByClassName('pillText')[0];
+                tmp.style.fontSize='12px';
+                tmp=temp.shadowRoot.childNodes[3].getElementsByClassName('pillIcon')[0];
+                tmp.style.width='16px';
+                tmp.style.height='16px';
+            }else if(analysis[i].charAt(0) === 'p'){
+                divv.querySelectorAll('#summaryPurposeBox')[0].style.display = 'flex';
+                pBox.append(temp);
+                let tmp=temp.shadowRoot.childNodes[3].getElementsByClassName('pillText')[0];
+                tmp.style.fontSize='12px';
+                tmp=temp.shadowRoot.childNodes[3].getElementsByClassName('pillIcon')[0];
+                tmp.style.width='16px';
+                tmp.style.height='16px';
+            } else if(analysis[i].charAt(0) === 'r'){
+                divv.querySelectorAll('#summaryRetentionBox')[0].style.display = 'flex';
+                rBox.append(temp);
+                let tmp=temp.shadowRoot.childNodes[3].getElementsByClassName('pillText')[0];
+                tmp.style.fontSize='12px';
+                tmp=temp.shadowRoot.childNodes[3].getElementsByClassName('pillIcon')[0];
+                tmp.style.width='16px';
+                tmp.style.height='16px';
+            }
+        }
+        
+    }
+}

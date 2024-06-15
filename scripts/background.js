@@ -5,10 +5,15 @@ loading();
 async function loading() {
   //await utility.removeAllRules();
   //await utility.removeWhiteListStorage();
-  await utility.removeSessionWhiteListStorage();
+  //await utility.removeSessionWhiteListStorage();
+  //await utility.removeSitePolicyStorage();
   //await utility.removeRulesCounter();
+  chrome.runtime.onStartup.addListener(async () => {
+    await utility.removeSessionWhiteListStorage();
+    await utility.removeSitePolicyStorage();
+    await utility.updateRules();
+  });
 
-  await utility.updateRules();
 
   chrome.webRequest.onBeforeRequest.addListener(
     async function (details) {
@@ -17,7 +22,7 @@ async function loading() {
           console.log('URL sent to loading page');
         });
       }
-  
+
     },
     { urls: ['<all_urls>'] }
   );

@@ -1,5 +1,5 @@
-import * as customPrefs from './preferencesClasses.js';
 import * as utility from './Utility.js';
+import * as customPrefs from './preferencesClasses.js';
 
 let lastClicked2 = null;
 let lastClickedB = null;
@@ -301,7 +301,7 @@ function makeBarSelected(j, prefBoxes, listPrefB) {
     lastClickedB = listPrefB[j];
 }
 
-function definePreferences() {
+export function definePreferences() {
     if (!customElements.get('dpid-element')) {
         customElements.define('dpid-element', customPrefs.PersonalIdentifier);
         customElements.define('dci-element', customPrefs.ContactInformation);

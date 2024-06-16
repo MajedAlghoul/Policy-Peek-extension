@@ -42,7 +42,8 @@ async function sendPolicyRequest(currUrl) {
       policyAnalysis: ['dsd-element', 'dci-element','po-element', 'rl-element'],
       policyAlignment: ['dsd-element'],
       policyLink: 'https://policies.google.com/privacy?hl=en-US',
-      siteRank: 'E'
+      siteRank: 'E',
+      lastUpdated:'8 Febuary 2024'
     };
 
     if (resp.match) {

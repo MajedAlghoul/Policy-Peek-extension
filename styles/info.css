@@ -1,0 +1,23 @@
+#infoBigContainer{
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+#infoWebsiteContainer{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#infoPolicyLinkContainer{
+    display: flex;
+}
+#infoPolicyRankingContainer{
+    display: flex;
+    justify-content: space-between;
+}
+#infoPolicyAlignmentContainer{
+    display: flex;
+    justify-content: space-between;
+}

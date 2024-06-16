@@ -1,5 +1,6 @@
 import { summaryHandling } from "./summary.js";
-
+import { alignmentHandling } from "./alignment.js";
+import { infoHandling } from "./info.js";
 setTopBarButtonsListeners();
 console.log("popup.js");
 let listItems = document.getElementsByClassName('bottomBarButtonsATags');
@@ -16,11 +17,10 @@ for (let i = 0; i < listItems.length; i++) {
             //contentTitle.textContent = this.textContent;
             if (contentFile === "popup/summary.html") {
                 summaryHandling();
-                //preferencesHandling();
             } else if (contentFile === "popup/alignment.html") {
-                //generalHandling();
+                alignmentHandling();
             }else if (contentFile === "popup/info.html") {
-                //generalHandling();
+                infoHandling();
             }
         });
         if (lastClicked) {

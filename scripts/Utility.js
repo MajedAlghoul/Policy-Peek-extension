@@ -631,7 +631,7 @@ export async function makeRequest(wurl) {
         url: wurl,
         preferences: prefs
     };
-
+/*
     try {
         const response = await axios.post(url, data, {
             headers: {
@@ -643,9 +643,15 @@ export async function makeRequest(wurl) {
         return response;
     } catch (error) {
         console.error('There was a problem with the axios operation:', error);
-    }
+    }*/
+   return null;
 }
 //===========================================================================================================
+export function setListEmpty(h,b,e){
+    h.style.display = 'none';
+    b.style.display = 'none';
+    e.style.display = 'flex';
+}
 
 export function fillLists(analysis,divv){
     const childElements = divv.querySelectorAll('.summaryBoxInnerActual');

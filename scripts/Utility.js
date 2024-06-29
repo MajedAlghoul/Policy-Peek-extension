@@ -1,6 +1,6 @@
 function chkPrefs() {
     return new Promise((resolve, reject) => {
-        chrome.storage.sync.get(['preferences'], function (result) {
+        chrome.storage.local.get(['preferences'], function (result) {
             if (chrome.runtime.lastError) {
                 reject(chrome.runtime.lastError);
             } else {
@@ -36,7 +36,7 @@ export async function pushPreferencesStorage(bit) {
                 toPush = tmp;
             }
         }
-        await chrome.storage.sync.set({ ['preferences']: toPush }, function () {
+        await chrome.storage.local.set({ ['preferences']: toPush }, function () {
             console.log('Preferences Storage Has Been Pushed');
         });
     } catch (error) {
@@ -46,7 +46,7 @@ export async function pushPreferencesStorage(bit) {
 
 export async function removePreferencesStorage() {
     try {
-        await chrome.storage.sync.remove(['preferences'], function () {
+        await chrome.storage.local.remove(['preferences'], function () {
             console.log('Preferences Has Been Deleted');
         });
     } catch (error) {
@@ -67,7 +67,7 @@ export async function removeSpecificPreferencesStorage(item) {
             }
             toPush = tmp;
         }
-        await chrome.storage.sync.set({ ['preferences']: toPush }, function () {
+        await chrome.storage.local.set({ ['preferences']: toPush }, function () {
             console.log('the item: ' + item + ' Has Been Removed From The Preferences Storage');
         });
     } catch (error) {
@@ -77,7 +77,7 @@ export async function removeSpecificPreferencesStorage(item) {
 //=======================================================================================
 function chkCusts() {
     return new Promise((resolve, reject) => {
-        chrome.storage.sync.get(['customs'], function (result) {
+        chrome.storage.local.get(['customs'], function (result) {
             if (chrome.runtime.lastError) {
                 reject(chrome.runtime.lastError);
             } else {
@@ -113,7 +113,7 @@ export async function pushCustomStorage(bit) {
                 toPush = tmp;
             }
         }
-        await chrome.storage.sync.set({ ['customs']: toPush }, function () {
+        await chrome.storage.local.set({ ['customs']: toPush }, function () {
             console.log('Custom Storage Has Been Pushed');
         });
     } catch (error) {
@@ -123,7 +123,7 @@ export async function pushCustomStorage(bit) {
 
 export async function removeCustomStorage() {
     try {
-        await chrome.storage.sync.remove(['customs'], function () {
+        await chrome.storage.local.remove(['customs'], function () {
             console.log('Custom Storage Has Been Deleted');
         });
     } catch (error) {
@@ -144,7 +144,7 @@ export async function removeSpecificCustomStorage(item) {
             }
             toPush = tmp;
         }
-        await chrome.storage.sync.set({ ['customs']: toPush }, function () {
+        await chrome.storage.local.set({ ['customs']: toPush }, function () {
             console.log('the item: ' + item + ' Has Been Removed From The Custom Storage');
         });
     } catch (error) {
@@ -154,7 +154,7 @@ export async function removeSpecificCustomStorage(item) {
 //======================================================================================
 function chkWht() {
     return new Promise((resolve, reject) => {
-        chrome.storage.sync.get(['whitelist'], function (result) {
+        chrome.storage.local.get(['whitelist'], function (result) {
             if (chrome.runtime.lastError) {
                 reject(chrome.runtime.lastError);
             } else {
@@ -190,7 +190,7 @@ export async function pushWhiteListStorage(bit) {
                 toPush = tmp;
             }
         }
-        await chrome.storage.sync.set({ ['whitelist']: toPush }, function () {
+        await chrome.storage.local.set({ ['whitelist']: toPush }, function () {
             console.log('WhiteList Storage Has Been Pushed');
         });
     } catch (error) {
@@ -200,7 +200,7 @@ export async function pushWhiteListStorage(bit) {
 
 export async function removeWhiteListStorage() {
     try {
-        await chrome.storage.sync.remove(['whitelist'], function () {
+        await chrome.storage.local.remove(['whitelist'], function () {
             console.log('WhiteList Storage Has Been Deleted');
         });
     } catch (error) {
@@ -221,7 +221,7 @@ export async function removeSpecificWhiteListStorage(item) {
             }
             toPush = tmp;
         }
-        await chrome.storage.sync.set({ ['whitelist']: toPush }, function () {
+        await chrome.storage.local.set({ ['whitelist']: toPush }, function () {
             console.log('the item: ' + item + ' Has Been Removed From The WhiteList Storage');
         });
     } catch (error) {
@@ -461,7 +461,7 @@ async function creatAssociatedRules(site) {
 //===================================================================================================
 async function getCurrentCounter() {
     return new Promise((resolve, reject) => {
-        chrome.storage.sync.get('rcounter', (result) => {
+        chrome.storage.local.get('rcounter', (result) => {
             if (chrome.runtime.lastError) {
                 return reject(chrome.runtime.lastError);
             }
@@ -472,7 +472,7 @@ async function getCurrentCounter() {
 
 async function updateCounter(newval) {
     return new Promise((resolve, reject) => {
-        chrome.storage.sync.set({ rcounter: newval }, () => {
+        chrome.storage.local.set({ rcounter: newval }, () => {
             if (chrome.runtime.lastError) {
                 return reject(chrome.runtime.lastError);
             }
@@ -490,7 +490,7 @@ export async function getRulesCounter() {
 
 export async function removeRulesCounter() {
     try {
-        await chrome.storage.sync.remove('rcounter', function () {
+        await chrome.storage.local.remove('rcounter', function () {
             console.log('counter has been removed');
         });
     } catch (error) {
@@ -692,5 +692,93 @@ export function fillLists(analysis,divv){
             }
         }
         
+    }
+}
+
+
+export function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+//======================================================================================================
+function chkStrg(item) {
+    return new Promise((resolve, reject) => {
+        chrome.storage.local.get([item], function (result) {
+            if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
+
+export async function pullStorage(item) {
+    try {
+        let result = await chkStrg(item);
+        if (!result[item]) {
+            await pushStorage(item,[]);
+            result = await chkStrg(item);
+        }
+        return result[item];
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function pushStorage(item,bit) {
+    try {
+        let toPush;
+        if (bit.length === 0) {
+            toPush = bit;
+        } else {
+            let tmp = await pullStorage(item);
+            if(!tmp) {
+                toPush=bit;
+            }
+            else if (!tmp.includes(bit[0])) {
+                toPush = tmp.concat(bit);
+            } else {
+                toPush = tmp;
+            }
+        }
+        await chrome.storage.local.set({ [item]: toPush }, function () {
+            console.log(item+' Has Been Pushed');
+        });
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function removeStorage(item) {
+    try {
+        await chrome.storage.local.remove([item], function () {
+            console.log(item+' Has Been Deleted');
+        });
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function removeSpecificStorage(item1,item) {
+    try {
+        let toPush;
+        if (item.length === 0) {
+            toPush = item;
+        } else {
+            let tmp = await pullStorage(item1);
+            if (tmp.includes(item)) {
+                tmp = tmp.filter(e => e !== item);
+                console.log('Item Founed And Will Be Removed From The '+item1+' Storage');
+            }
+            toPush = tmp;
+        }
+        await chrome.storage.local.set({ [item1]: toPush }, function () {
+            console.log('the item: ' + item + ' Has Been Removed From The '+item1+' Storage');
+        });
+    } catch (error) {
+        console.error(error);
     }
 }

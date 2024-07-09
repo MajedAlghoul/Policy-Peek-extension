@@ -10,8 +10,8 @@ export function preferencesHandling() {
     let listPrefB = document.getElementsByClassName('prefButton');
     let prefBoxes = document.getElementsByClassName('innerprefBoxes');
 
-    //utility.removePreferencesStorage();
-    //utility.removeCustomStorage();
+    //utility.removeStorage('preferences');
+    //utility.removeStorage('customs');
 
     loadPreferences(prefBoxes, listPrefB);
     for (let j = 0; j < listPrefB.length; j++) {
@@ -19,15 +19,15 @@ export function preferencesHandling() {
             eventt.preventDefault();
 
             if (j === 3) {
-                let temp = await utility.pullCustomStorage();
+                let temp = await utility.pullStorage('customs');
                 if (!temp || temp.length === 0) {
-                    await utility.pushCustomStorage((await utility.pullPreferencesStorage())[0]);
+                    await utility.pushStorage('customs',(await utility.pullStorage('preferences'))[0]);
                 }
-                await utility.removePreferencesStorage();
-                await utility.pushPreferencesStorage([3]);
+                await utility.removeStorage('preferences');
+                await utility.pushStorage("preferences", [3]);
             } else {
-                await utility.removePreferencesStorage();
-                await utility.pushPreferencesStorage(getPredefinedPreferences(j));
+                await utility.removeStorage('preferences');
+                await utility.pushStorage("preferences", getPredefinedPreferences(j));
             }
 
             loadPreferences(prefBoxes, listPrefB);
@@ -37,7 +37,7 @@ export function preferencesHandling() {
 
 async function loadPreferences(prefBoxes, listPrefB) {
     try {
-        let prefs = await utility.pullPreferencesStorage();
+        let prefs = await utility.pullStorage('preferences');
         makeBarSelected(prefs, prefBoxes, listPrefB);
         fillPreferences(prefs);
     } catch (error) {
@@ -48,8 +48,8 @@ async function loadPreferences(prefBoxes, listPrefB) {
 async function fillPreferences(prefs) {
     try {
         if (!prefs || prefs.length === 0) {
-            await utility.pushPreferencesStorage(getPredefinedPreferences(1));
-            prefs = await utility.pullPreferencesStorage();
+            await utility.pushStorage("preferences",getPredefinedPreferences(1));
+            prefs = await utility.pullStorage('preferences');
         }
         let pType = prefs[0];
         let pArr = prefs.slice(1);
@@ -71,7 +71,7 @@ async function fillPreferences(prefs) {
                 }
             }
 
-            prefs = await utility.pullPreferencesStorage();
+            prefs = await utility.pullStorage('preferences');
             pArr = prefs.slice(1);
             pArr.forEach((custs) => {
                 if (freeBox2.getElementsByTagName(custs)[0]) {
@@ -83,9 +83,9 @@ async function fillPreferences(prefs) {
         } else {
             let freeBox = getPredefinedFreeBoxes(pType);
             if (!pArr || pArr.length === 0) {
-                await utility.removePreferencesStorage();
-                await utility.pushPreferencesStorage(getPredefinedPreferences(pType));
-                prefs = await utility.pullPreferencesStorage();
+                await utility.removeStorage('preferences');
+                await utility.pushStorage("preferences", getPredefinedPreferences(pType));
+                prefs = await utility.pullStorage('preferences');
                 pArr = prefs.slice(1);
             }
             pArr.forEach((pref) => {
@@ -118,13 +118,13 @@ async function fillAllPreferences(allPrefs, freeBox1, freeBox2) {
 }
 
 async function copyFromCustomToPreferences() {
-    await utility.removePreferencesStorage();
-    await utility.pushPreferencesStorage(await utility.pullCustomStorage());
+    await utility.removeStorage('preferences');
+    await utility.pushStorage("preferences", await utility.pullStorage('customs'));
 }
 
 async function copyFromPreferencesToCustom() {
-    await utility.removeCustomStorage();
-    await utility.pushCustomStorage(await utility.pullPreferencesStorage());
+    await utility.removeStorage('customs');
+    await utility.pushStorage('customs',await utility.pullStorage('preferences'));
 }
 
 function attatchPrefListener(pref, temp, freeBox1, freeBox2) {
@@ -133,7 +133,7 @@ function attatchPrefListener(pref, temp, freeBox1, freeBox2) {
         temp.shadowRoot.childNodes[3].getElementsByClassName('pillB')[0].addEventListener('click', async function (eventt) {
             eventt.preventDefault();
             eventt.stopPropagation();
-            let pss = await utility.pullPreferencesStorage();
+            let pss = await utility.pullStorage('preferences');
             if (freeBox1.getElementsByTagName(pref).length === 0) {
                 let children = Array.from(freeBox1.children);
                 let shells = freeBox1.getElementsByTagName('div');
@@ -150,17 +150,17 @@ function attatchPrefListener(pref, temp, freeBox1, freeBox2) {
                 attatchPrefListener(pref, temp, freeBox1, freeBox2);
 
                 if (!pss.includes(3)) {
-                    let temp = await utility.pullPreferencesStorage();
+                    let temp = await utility.pullStorage('preferences');
                     if (temp) {
-                        await utility.removePreferencesStorage();
-                        await utility.removeCustomStorage()
+                        await utility.removeStorage('preferences');
+                        await utility.removeStorage('customs');
                     }
-                    await utility.pushPreferencesStorage([3]);
-                    await utility.pushCustomStorage([3]);
+                    await utility.pushStorage("preferences", [3]);
+                    await utility.pushStorage('customs',[3]);
                 }
 
-                await utility.pushPreferencesStorage([temp.tagName.toLowerCase()]);
-                await utility.pushCustomStorage([temp.tagName.toLowerCase()]);
+                await utility.pushStorage("preferences", [temp.tagName.toLowerCase()]);
+                await utility.pushStorage('customs',[temp.tagName.toLowerCase()]);
             } else {
                 let children = Array.from(freeBox2.children);
                 let shells = freeBox2.getElementsByTagName('div');
@@ -175,14 +175,14 @@ function attatchPrefListener(pref, temp, freeBox1, freeBox2) {
 
                 attatchPrefListener(pref, temp, freeBox1, freeBox2);
 
-                await utility.removeSpecificPreferencesStorage(temp.tagName.toLowerCase());
-                await utility.removeSpecificCustomStorage(temp.tagName.toLowerCase());
+                await utility.removeSpecificStorage('preferences', temp.tagName.toLowerCase());
+                await utility.removeSpecificStorage('customs',temp.tagName.toLowerCase());
 
-                pss = await utility.pullPreferencesStorage();
+                pss = await utility.pullStorage('preferences');
 
                 if (pss.length === 1 && pss.includes(3)) {
-                    await utility.removeSpecificPreferencesStorage(3);
-                    await utility.removeSpecificCustomStorage(3);
+                    await utility.removeSpecificStorage('preferences',3);
+                    await utility.removeSpecificStorage('customs',3);
                 }
             }
         });

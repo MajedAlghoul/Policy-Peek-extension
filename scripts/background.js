@@ -4,12 +4,12 @@ loading();
 
 async function loading() {
   //await utility.removeAllRules();
-  //await utility.removeWhiteListStorage();
-  //await utility.removeSessionWhiteListStorage();
+  //await utility.removeStorage('whitelist');
+  //await utility.removeStorage('swhitelist');
   //await utility.removeSitePolicyStorage();
   //await utility.removeRulesCounter();
   chrome.runtime.onStartup.addListener(async () => {
-    await utility.removeSessionWhiteListStorage();
+    await utility.removeStorage('switelist');
     await utility.removeSitePolicyStorage();
     await utility.updateRules();
   });
@@ -36,15 +36,15 @@ if (details.initiator) {
 
 if (iop && iop.length >= 3) {
   try {
-    let wl = await utility.pullWhiteListStorage();
+    let wl = await utility.pullStorage('whitelist');
     wl = wl.some(item => item.includes(iop[1] + '.' + iop[2]));
 
-    let swl = await utility.pullSessionWhiteListStorage();
+    let swl = await utility.pullStorage('switelist');
     swl = swl.some(item => item.includes(iop[1] + '.' + iop[2]));
 
     if (wl || swl) {
       //console.log('trace '+ details.url);
-      await utility.pushSessionWhiteListStorage(details.url);
+      await utility.pushStorage('switelist',details.url);
       await requestUpdate();
     }
   } catch (error) {

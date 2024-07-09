@@ -1,11 +1,11 @@
-import { pullWhiteListStorage, pushWhiteListStorage, updateRules, removeWhiteListStorage, removeSpecificWhiteListStorage } from "./Utility.js";
+import { pullStorage, pushStorage, updateRules, removeSpecificStorage } from "./Utility.js";
 let actionFlag = null;
 let oldSName = "";
 let oldSUrl = "";
 let glass = document.getElementById('glassOnTop');
 let ontop = document.getElementById('OnTopContainer');
 export function generalHandling() {
-    //removeWhiteListStorage();
+    //removeStorage('whitelist');
     loadTheList();
 
     if (!customElements.get('wl-item')) {
@@ -28,7 +28,7 @@ export function generalHandling() {
                 tempItm = item.shadowRoot.childNodes[3].getElementsByClassName('itemSiteUrl')[0].innerHTML;
 
             } else {
-                await removeSpecificWhiteListStorage(oldSUrl);
+                await removeSpecificStorage('whitelist',oldSUrl);
                 modifyCustomElement(actionFlag, sName, sUrl);
                 tempItm = actionFlag.shadowRoot.childNodes[3].getElementsByClassName('itemSiteUrl')[0].innerHTML;
                 actionFlag = null;
@@ -36,7 +36,7 @@ export function generalHandling() {
             glass.style.display = 'none';
             ontop.style.display = 'none';
 
-            await pushWhiteListStorage([tempItm]);
+            await pushStorage('whitelist',[tempItm]);
             await updateRules();
         }
     });
@@ -63,7 +63,7 @@ function addListenersToItems(item) {
     });
 
     deleteB.addEventListener('click', async function () {
-        await removeSpecificWhiteListStorage(sUrl);
+        await removeSpecificStorage('whitelist',sUrl);
         whBody.removeChild(item);
         await updateRules();
     });
@@ -71,7 +71,7 @@ function addListenersToItems(item) {
 }
 
 async function checkInput(sUrl) {
-    let whItms = await pullWhiteListStorage();
+    let whItms = await pullStorage('whitelist');
     if (whItms.includes(sUrl)) {
         return false;
     }
@@ -86,7 +86,7 @@ function createItem() {
 }
 
 async function loadTheList() {
-    let items = await pullWhiteListStorage();
+    let items = await pullStorage('whitelist');
     console.log(items);
     items.forEach(element => {
         let itm = createItem();
@@ -148,7 +148,7 @@ function activateCancelling() {
                 for (const itm of itemsToDelete) {
                     let whBody = document.getElementById('wlBody');
                     let sUrl = itm.shadowRoot.childNodes[3].getElementsByClassName('itemSiteUrl')[0].innerHTML;
-                    await removeSpecificWhiteListStorage(sUrl);
+                    await removeSpecificStorage('whitelist',sUrl);
                     whBody.removeChild(itm);
                 }
                 await updateRules();

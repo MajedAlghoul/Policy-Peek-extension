@@ -1,12 +1,10 @@
 import {
   trimUrl,
   fillLists,
-  pushSessionWhiteListStorage,
   updateRules,
-  pushWhiteListStorage,
+  pushStorage,
   pushSitePolicyStorage,
   pullSitePolicyStorage,
-  pullPreferencesStorage,
   pullStorage,
 } from "./Utility.js";
 import { definePreferences } from "./preferences.js";
@@ -45,7 +43,7 @@ async function modifyPage(sitePolicy) {
         document.getElementsByClassName("theBodyOfBlockList1")[0]
       );
       fillLists(
-        await pullPreferencesStorage(),
+        await pullStorage('preferences'),
         document.getElementsByClassName("theBodyOfBlockList2")[0]
       );
     }
@@ -82,9 +80,9 @@ async function handleClickAuth(type,temp, sitePolicy, currentURL) {
 
   if (profiles[j].password === blockInput.value) {
     if (type === 0) {
-      await pushSessionWhiteListStorage([temp]);
+      await pushStorage('swhitelist',[temp]);
     } else {
-      await pushWhiteListStorage([temp]);
+      await pushStorage('whitelist',[temp]);
     }
     await updateRules();
     await addTheTempSite(temp, sitePolicy);

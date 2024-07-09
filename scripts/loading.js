@@ -1,4 +1,4 @@
-import { pullPreferencesStorage, pushSessionWhiteListStorage, updateRules,pushSitePolicyStorage } from './Utility.js';
+import { pushStorage, updateRules,pushSitePolicyStorage } from './Utility.js';
 import { trimUrl } from './Utility.js';
 chrome.storage.local.get('currentURL', async function (result) {
   const currentURL = result.currentURL;
@@ -47,7 +47,7 @@ async function sendPolicyRequest(currUrl) {
     };
 
     if (resp.match) {
-      await pushSessionWhiteListStorage([trimUrl(currUrl)]);
+      await pushStorage('swhitelist',[trimUrl(currUrl)]);
       let siteToPush={
         currUrl:resp
       };

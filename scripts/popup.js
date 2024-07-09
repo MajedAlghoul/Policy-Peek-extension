@@ -9,7 +9,10 @@ import {
   getUserInfo,
   syncProfilesToDrive,
   fetchProfilesFromDrive,
-  generateUUID
+  generateUUID,
+  authenticateAccount,
+  uploadToGoogle,
+  updateProfile
 } from "./Utility.js";
 
 const CLIENT_ID = chrome.runtime.getManifest().oauth2.client_id;
@@ -72,44 +75,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });*/
 
-async function authenticateAccount() {
-  return new Promise((resolve, reject) => {
-    chrome.identity.launchWebAuthFlow(
-      {
-        url: `https://accounts.google.com/o/oauth2/auth?client_id=${encodeURIComponent(
-          CLIENT_ID
-        )}&response_type=token&redirect_uri=https://${
-          chrome.runtime.id
-        }.chromiumapp.org&scope=${encodeURIComponent(
-          "openid email profile https://www.googleapis.com/auth/drive.file"
-        )}`,
-        interactive: true,
-      },
-      function (redirect_url) {
-        if (chrome.runtime.lastError || !redirect_url) {
-          console.error(
-            "Error during authentication:",
-            chrome.runtime.lastError
-          );
-          reject(chrome.runtime.lastError);
-        } else {
-          console.log("Redirect URL:", redirect_url);
-          // Extract the token from the redirect URL
-          const urlParams = new URLSearchParams(
-            new URL(redirect_url).hash.substring(1)
-          );
-          const token = urlParams.get("access_token");
-          if (token) {
-            console.log("Access Token granted");
-            resolve(token);
-          } else {
-            reject(new Error("Access token not found in the response."));
-          }
-        }
-      }
-    );
-  });
-}
+
 
 async function handleAccounts() {
   const account = await pullStorage("account");
@@ -136,20 +102,11 @@ async function handleAccounts() {
   
 }
 
-async function uploadToGoogle() {
-  const token = await authenticateAccount();
-  await updateProfile();
-  const profiles = await pullStorage('profiles');
-  syncProfilesToDrive(token,profiles, function(response) {
-    console.log('Sync response:', response);
-  });
-}
-
 async function downloadFromGoogle() {
   const token = await authenticateAccount();
   fetchProfilesFromDrive(token,API_KEY, async function (profiles) {
     if(!profiles){
-        await updateProfile();
+        //await updateProfile();
         const profiles = await pullStorage('profiles');
         syncProfilesToDrive(token,profiles, function(response) {
           console.log('Sync response:', response);
@@ -157,7 +114,7 @@ async function downloadFromGoogle() {
         flipPopupToSignedIn((await pullStorage('account'))[0]);
     }else{
       console.log("Profiles: ", profiles);
-        triggerConflictDialog(token,profiles);
+      triggerConflictDialog(token,profiles);
     }
     //console.log("Profiles:", profiles);
     // Handle profiles locally
@@ -174,13 +131,20 @@ function triggerConflictDialog(token,profiles) {
   cloudB.addEventListener('click',async function(){
     await removeStorage('profiles');
     await pushStorage('profiles',profiles);
+    for (let index = 0; index < profiles.length; index++) {
+      if(profiles[index].isActive){
+        await restoreProfile(profiles[index].id);
+        break;
+      }
+    }
+
     flipPopupToSignedIn((await pullStorage('account'))[0]);
     document.getElementById('actualSessionContainer').replaceChildren();
     loadProfiles();
   });
 
   localB.addEventListener('click',async function(){
-    await updateProfile();
+    //await updateProfile();
     const profiles = await pullStorage('profiles');
     syncProfilesToDrive(token,profiles, function(response) {
       console.log('Sync response:', response);
@@ -361,8 +325,12 @@ async function attatchListerners(item, degree, j) {
         eventt.preventDefault();
         eventt.stopPropagation();
   
-        await updateProfile();
+        //await updateProfile();
         await restoreProfile(j);
+        const acc= await pullStorage("account");
+        if (acc.length !== 0) {
+          await uploadToGoogle();
+        }
         console.log('brah');
         await makeProfileSelected(j);
       });
@@ -460,8 +428,16 @@ function triggerOntopEvents() {
   let backB = document.getElementById("goBackSessionArrow");
   backB.style.display = "block";
 
-  backB.addEventListener("click", function (event) {
+  backB.addEventListener("click", async function (event) {
     event.preventDefault();
+
+    const account = await pullStorage("account");
+    if (account.length !== 0) {
+      flipPopupToSignedIn(account[0]);
+    }else{
+      flipPopupToLoggedOff();
+    } 
+
     document.getElementById("accountContainer").style.display = "flex";
     document.getElementById("sessionContainer").style.display = "flex";
     document.getElementById("sessionOntopEventsController").style.display =
@@ -501,66 +477,44 @@ function handleProfileCreation() {
       let id=generateUUID();
       const newp = {
         id:id,
-        isActive: true,
+        isActive: false,
         name: sessName.value,
         password: sessPass.value,
         whitelist: [],
         preferences: [],
         customs: [],
       };
-      console.log('the new profile creation-------------------',newp);
-      await pushStorage("profiles", newp);
-      const sessionBox = document.getElementById("actualSessionContainer");
-      sessionBox.removeChild(sessionBox.lastElementChild);
-
-      let item = document.createElement("profile-item");
-      sessionBox.appendChild(item);
-
-      let selector = item.shadowRoot.childNodes[3].getElementsByClassName(
-        "profileLeftContainer"
-      )[0];
-      selector.querySelector(".SessionName").textContent = sessName.value;
-      console.log("majde it?x2");
-      //requestAnimationFrame(() => {
-        console.log('leng '+(sessionBox.children.length - 1));
-        await attatchListerners(
-          item.shadowRoot.childNodes[3],
-          2,
-          (id)
-        );
-      //});
-
-      const addb = document.createElement("addprofile-item");
-      sessionBox.appendChild(addb);
-      await attatchListerners(addb.shadowRoot.childNodes[3], 0, -1);
-
       const clickEvent = new MouseEvent("click", {
         view: window,
         bubbles: false,
         cancelable: true,
       });
-      item.shadowRoot.childNodes[3].dispatchEvent(clickEvent);
-      const acc= await pullStorage("account");
-      console.log('nooooooooooooooooooooooooo')
-      if (acc.length !== 0) {
-        console.log('ineerrrrrrrrrrrrrrrrrr')
-        await uploadToGoogle();
-      }
+      const sessionBox = document.getElementById("actualSessionContainer");
+      let item = document.createElement("profile-item");
+      const addb = document.createElement("addprofile-item");
+      let selector;
+      console.log('the new profile creation-------------------',newp);
 
+      await pushStorage("profiles", newp);
+
+      sessionBox.removeChild(sessionBox.lastElementChild);
+      sessionBox.appendChild(item);
+      selector = item.shadowRoot.childNodes[3].getElementsByClassName(
+        "profileLeftContainer")[0];
+      selector.querySelector(".SessionName").textContent = sessName.value;
+
+      console.log("majde it?x2");
+      console.log('leng '+(sessionBox.children.length - 1));
+
+      await attatchListerners(item.shadowRoot.childNodes[3],2,(id));
+      sessionBox.appendChild(addb);
+      await attatchListerners(addb.shadowRoot.childNodes[3], 0, -1);
+
+      item.shadowRoot.childNodes[3].dispatchEvent(clickEvent);
+      console.log('nooooooooooooooooooooooooo')
       backB.dispatchEvent(clickEvent);
 
-      const account = await pullStorage("account");
-      if (account.length !== 0) {
-        flipPopupToSignedIn(account[0]);
-        //rightB = removeAllEventListeners(rightB);
-        //rightB.addEventListener("click", async function (event) {
-        //  event.preventDefault();
-        //  await removeStorage("account");
-        //  flipPopupToLoggedOff();
-        //});
-      }else{
-        flipPopupToLoggedOff();
-      } 
+
     }
   });
 }
@@ -617,6 +571,7 @@ async function handleProfileEditing(j) {
         bubbles: false,
         cancelable: true,
       });
+
       const acc= await pullStorage("account");
       if (acc.length !== 0) {
         await uploadToGoogle();
@@ -666,38 +621,18 @@ async function handleProfileDeletion(j) {
 
   if (deletionFlag===1) {
     sessionBox.children[0].shadowRoot.childNodes[3].dispatchEvent(clickEvent);
+  }else{
+    const acc= await pullStorage("account");
+    if (acc.length !== 0) {
+      await uploadToGoogle();
+    }
   }
 
-
-  const acc= await pullStorage("account");
-  if (acc.length !== 0) {
-    await uploadToGoogle();
-  }
   backB.dispatchEvent(clickEvent);
 
 }
 
-async function updateProfile() {
-  let profs = await pullStorage("profiles");
-  let selected=null;
-  for(let i=0;i<profs.length;i++){
-    if(profs[i].id === lastClicked2){
-      selected=i;
-      break;
-    }
-  }
-  if(selected!==null){
-    profs[selected].whitelist = await pullStorage("whitelist");
-    profs[selected].preferences = await pullStorage("preferences");
-    profs[selected].customs = await pullStorage("customs");
-    console.log('the profile updating-------------------',profs);
-    await removeStorage("profiles");
-    await pushStorage("profiles", profs);
-}
-  //profs[lastClicked2].isActive = false;
 
-
-}
 
 async function restoreProfile(j) {
   let profs = await pullStorage("profiles");

@@ -1,327 +1,3 @@
-function chkPrefs() {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(["preferences"], function (result) {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
-        resolve(result);
-      }
-    });
-  });
-}
-
-export async function pullPreferencesStorage() {
-  try {
-    let result = await chkPrefs();
-    if (!result.preferences) {
-      await pushPreferencesStorage([]);
-      result = await chkPrefs();
-    }
-    return result.preferences;
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function pushPreferencesStorage(bit) {
-  try {
-    let toPush;
-    if (bit.length === 0) {
-      toPush = bit;
-    } else {
-      let tmp = await pullPreferencesStorage();
-      if (!tmp.includes(bit[0])) {
-        toPush = tmp.concat(bit);
-      } else {
-        toPush = tmp;
-      }
-    }
-    await chrome.storage.local.set({ ["preferences"]: toPush }, function () {
-      console.log("Preferences Storage Has Been Pushed");
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function removePreferencesStorage() {
-  try {
-    await chrome.storage.local.remove(["preferences"], function () {
-      console.log("Preferences Has Been Deleted");
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function removeSpecificPreferencesStorage(item) {
-  try {
-    let toPush;
-    if (item.length === 0) {
-      toPush = item;
-    } else {
-      let tmp = await pullPreferencesStorage();
-      if (tmp.includes(item)) {
-        tmp = tmp.filter((e) => e !== item);
-        console.log(
-          "Item Founed And Will Be Removed From The Preferences Storage"
-        );
-      }
-      toPush = tmp;
-    }
-    await chrome.storage.local.set({ ["preferences"]: toPush }, function () {
-      console.log(
-        "the item: " + item + " Has Been Removed From The Preferences Storage"
-      );
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-//=======================================================================================
-function chkCusts() {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(["customs"], function (result) {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
-        resolve(result);
-      }
-    });
-  });
-}
-
-export async function pullCustomStorage() {
-  try {
-    let result = await chkCusts();
-    if (!result.customs) {
-      await pushCustomStorage([]);
-      result = await chkCusts();
-    }
-    return result.customs;
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function pushCustomStorage(bit) {
-  try {
-    let toPush;
-    if (bit.length === 0) {
-      toPush = bit;
-    } else {
-      let tmp = await pullCustomStorage();
-      if (!tmp.includes(bit[0])) {
-        toPush = tmp.concat(bit);
-      } else {
-        toPush = tmp;
-      }
-    }
-    await chrome.storage.local.set({ ["customs"]: toPush }, function () {
-      console.log("Custom Storage Has Been Pushed");
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function removeCustomStorage() {
-  try {
-    await chrome.storage.local.remove(["customs"], function () {
-      console.log("Custom Storage Has Been Deleted");
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function removeSpecificCustomStorage(item) {
-  try {
-    let toPush;
-    if (item.length === 0) {
-      toPush = item;
-    } else {
-      let tmp = await pullCustomStorage();
-      if (tmp.includes(item)) {
-        tmp = tmp.filter((e) => e !== item);
-        console.log("Item Founed And Will Be Removed From The Custom Storage");
-      }
-      toPush = tmp;
-    }
-    await chrome.storage.local.set({ ["customs"]: toPush }, function () {
-      console.log(
-        "the item: " + item + " Has Been Removed From The Custom Storage"
-      );
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-//======================================================================================
-function chkWht() {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(["whitelist"], function (result) {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
-        resolve(result);
-      }
-    });
-  });
-}
-
-export async function pullWhiteListStorage() {
-  try {
-    let result = await chkWht();
-    if (!result.whitelist) {
-      await pushWhiteListStorage([]);
-      result = await chkWht();
-    }
-    return result.whitelist;
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function pushWhiteListStorage(bit) {
-  try {
-    let toPush;
-    if (bit.length === 0) {
-      toPush = bit;
-    } else {
-      let tmp = await pullWhiteListStorage();
-      if (!tmp.includes(bit[0])) {
-        toPush = tmp.concat(bit);
-      } else {
-        toPush = tmp;
-      }
-    }
-    await chrome.storage.local.set({ ["whitelist"]: toPush }, function () {
-      console.log("WhiteList Storage Has Been Pushed");
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function removeWhiteListStorage() {
-  try {
-    await chrome.storage.local.remove(["whitelist"], function () {
-      console.log("WhiteList Storage Has Been Deleted");
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function removeSpecificWhiteListStorage(item) {
-  try {
-    let toPush;
-    if (item.length === 0) {
-      toPush = item;
-    } else {
-      let tmp = await pullWhiteListStorage();
-      if (tmp.includes(item)) {
-        tmp = tmp.filter((e) => e !== item);
-        console.log(
-          "Item Founed And Will Be Removed From The WhiteList Storage"
-        );
-      }
-      toPush = tmp;
-    }
-    await chrome.storage.local.set({ ["whitelist"]: toPush }, function () {
-      console.log(
-        "the item: " + item + " Has Been Removed From The WhiteList Storage"
-      );
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-//======================================================================================================
-function chkSWht() {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(["swhitelist"], function (result) {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
-        resolve(result);
-      }
-    });
-  });
-}
-
-export async function pullSessionWhiteListStorage() {
-  try {
-    let result = await chkSWht();
-    if (!result.swhitelist) {
-      await pushSessionWhiteListStorage([]);
-      result = await chkSWht();
-    }
-    return result.swhitelist;
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function pushSessionWhiteListStorage(bit) {
-  try {
-    let toPush;
-    if (bit.length === 0) {
-      toPush = bit;
-    } else {
-      let tmp = await pullSessionWhiteListStorage();
-      if (!tmp.includes(bit[0])) {
-        toPush = tmp.concat(bit);
-      } else {
-        toPush = tmp;
-      }
-    }
-    await chrome.storage.local.set({ ["swhitelist"]: toPush }, function () {
-      console.log("Session WhiteList Storage Has Been Pushed");
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function removeSessionWhiteListStorage() {
-  try {
-    await chrome.storage.local.remove(["swhitelist"], function () {
-      console.log("Session WhiteList Storage Has Been Deleted");
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function removeSpecificSessionWhiteListStorage(item) {
-  try {
-    let toPush;
-    if (item.length === 0) {
-      toPush = item;
-    } else {
-      let tmp = await pullSessionWhiteListStorage();
-      if (tmp.includes(item)) {
-        tmp = tmp.filter((e) => e !== item);
-        console.log(
-          "Item Founed And Will Be Removed From The Session WhiteList Storage"
-        );
-      }
-      toPush = tmp;
-    }
-    await chrome.storage.local.set({ ["swhitelist"]: toPush }, function () {
-      console.log(
-        "the item: " +
-          item +
-          " Has Been Removed From The Session WhiteList Storage"
-      );
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-//========================================================================================================
 export async function removeSpecificRules(ids) {
   await chrome.declarativeNetRequest
     .updateDynamicRules({
@@ -345,8 +21,8 @@ export async function addRules(rules) {
 export async function updateRules() {
   await removeAllRules();
   await removeRulesCounter();
-  let wl = await pullWhiteListStorage();
-  let swl = await pullSessionWhiteListStorage();
+  let wl = await pullStorage('whitelist');
+  let swl = await pullStorage('swhitelist');
   let sWMix = [];
   let rules = [];
 
@@ -876,6 +552,46 @@ export function generateUUID() {
 }
 //===============================================================================================
 
+export async function authenticateAccount() {
+  const CLIENT_ID = chrome.runtime.getManifest().oauth2.client_id;
+  return new Promise((resolve, reject) => {
+    chrome.identity.launchWebAuthFlow(
+      {
+        url: `https://accounts.google.com/o/oauth2/auth?client_id=${encodeURIComponent(
+          CLIENT_ID
+        )}&response_type=token&redirect_uri=https://${
+          chrome.runtime.id
+        }.chromiumapp.org&scope=${encodeURIComponent(
+          "openid email profile https://www.googleapis.com/auth/drive.file"
+        )}`,
+        interactive: true,
+      },
+      function (redirect_url) {
+        if (chrome.runtime.lastError || !redirect_url) {
+          console.error(
+            "Error during authentication:",
+            chrome.runtime.lastError
+          );
+          reject(chrome.runtime.lastError);
+        } else {
+          console.log("Redirect URL:", redirect_url);
+          // Extract the token from the redirect URL
+          const urlParams = new URLSearchParams(
+            new URL(redirect_url).hash.substring(1)
+          );
+          const token = urlParams.get("access_token");
+          if (token) {
+            console.log("Access Token granted");
+            resolve(token);
+          } else {
+            reject(new Error("Access token not found in the response."));
+          }
+        }
+      }
+    );
+  });
+}
+
 export function getUserInfo(token, callback) {
     fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
       headers: {
@@ -1031,6 +747,47 @@ export async function fetchProfilesFromDrive(token, API_KEY, callback) {
     }
   }
 
+//========================================================================================
+  export async function uploadToGoogle() {
+    const token = await authenticateAccount();
+    const profiles = await pullStorage('profiles');
+    syncProfilesToDrive(token,profiles, function(response) {
+      console.log('Sync response:', response);
+    });
+  }
+  
+ export async function updateProfile() {
+    let profs = await pullStorage("profiles");
+    let selected=null;
+
+
+  /*  for(let i=0;i<profs.length;i++){
+      if(profs[i].id === lastClicked2){
+        selected=i;
+        break;
+      }
+    }*/
+
+      for(let i=0;i<profs.length;i++){
+        if(profs[i].isActive){
+          selected=i;
+          break;
+        }
+      }
+
+    if(selected!==null){
+      profs[selected].whitelist = await pullStorage("whitelist");
+      profs[selected].preferences = await pullStorage("preferences");
+      profs[selected].customs = await pullStorage("customs");
+      console.log('the profile updating-------------------',profs);
+      await removeStorage("profiles");
+      await pushStorage("profiles", profs);
+  }
+    //profs[lastClicked2].isActive = false;
+  
+  
+  }
+  
 //======================================================================================================
 function chkStrg(item) {
   return new Promise((resolve, reject) => {
@@ -1075,6 +832,14 @@ export async function pushStorage(item, bit) {
     await chrome.storage.local.set({ [item]: toPush }, function () {
       console.log(item + " Has Been Pushed");
     });
+
+    if(item === 'preferences'|| item === 'whitelist'){
+      await updateProfile();
+      const acc= await pullStorage("account");
+      if (acc.length !== 0) {
+        await uploadToGoogle(item);
+      }
+    }
   } catch (error) {
     console.error(error);
   }

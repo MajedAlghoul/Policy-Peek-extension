@@ -24,6 +24,16 @@
       "js": ["scripts/content.js"]
     }
   ],
+  "oauth2": {
+    "client_id": "741512590350-q9coj4mbvjei61ojgv4jq58i9k9rmdvi.apps.googleusercontent.com",
+    "scopes": [
+      "openid",
+      "email",
+      "profile",
+      "https://www.googleapis.com/auth/drive.file"
+    ],
+    "key": "AIzaSyDPRH3woyj8BibFEu69zHWVHWnxCVOzX3Y"
+  },
   "permissions": [
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
@@ -31,7 +41,8 @@
     "storage",
     "tabs",
     "webRequest",
-    "activeTab"
+    "activeTab",
+    "identity"
   ],
   "host_permissions": [
     "<all_urls>"

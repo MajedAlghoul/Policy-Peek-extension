@@ -32,17 +32,18 @@
             </div>
             <div id="profileContainer">
                 <div id="nvBar">
-                    <a id="xButton" href=""><img style="width: 15px;height:15px;" src="../images/x.png" alt=""></a>
+                    <a id="xButton" href=""><img style="margin-left: 10px; width: 15px;height:15px;" src="../images/x.png" alt=""></a>
                     <svg id="goBackSessionArrow" style="display: none; width: 15px; height:15px; cursor:pointer;" width="256" height="216" viewBox="0 0 256 216" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M16 107.772H240" stroke="white" stroke-width="31.7588" stroke-linecap="round"/>
                         <path d="M16 107.769L105.544 16.9999" stroke="white" stroke-width="31.7588" stroke-linecap="round"/>
                         <path d="M16 107.769L105.095 199" stroke="white" stroke-width="31.7588" stroke-linecap="round"/>
                         </svg>
-                    <p id="pageTitleProfile">Profile</p>
-                    <a href="" id="redButtonAnch" style="visibility: hidden;">
+                    <p id="pageTitleProfile" style=" margin-left: 38px; margin-top: 28px;">Profile</p>
+                    <a href="" id="redButtonAnch" style="margin-right: 18px; visibility: hidden;">
                         <div id="redButton" >Sign Out</div>
                     </a>
                 </div>
+
                 <div id="sessionOntopEventsController" style="display: none;">
                     <div id="eventTopText">
                         Enter current session's password to make changes on sessions
@@ -74,42 +75,34 @@
 
                 </div>
                 <div id="accountContainer">
-                    <div>
-                        You are not signed in
+                    <div id="accountWarningPrompt" style="display: none;">
+                        <div style="font-size: 14px; line-height: 1.5;" style="display: none;">
+                            Profiles were found on your Google account.<br>would you like to use them, or keep the local ones?
+                        </div>
+                        <div style="display: flex; justify-content:flex-end; align-items: center;">
+                            <button class="keepButtons" id="keepCloudButton">Keep Cloud</button>
+                            <button class="keepButtons" style="margin-left: 20px;" id="keepLocalButton">Keep Local</button>
+                        </div>
                     </div>
-                    <a href="" style="margin-top: 10px; color:rgb(128, 183, 255);  text-decoration: underline;">sign
-                        in</a>
+                    <div id="accountTripleContainer" style="display: none;">
+                        <div id="popupAccountImageContainer">
+                            <img src="" alt="" id="popupAccountImage">
+                        </div>
+                        <div id="popupAccountName">
+                        </div>
+                        <div id="popupAccountEmail">
+                        </div>
+                    </div>
+                    <div id="accountNotSignedInContainer">
+                        <div>
+                            You are not signed in
+                        </div>
+                        <button id="popupSignInButton" style="margin-top: 10px; color:rgb(128, 183, 255);  text-decoration: underline; background:none; border:none; cursor:pointer;">sign in</button>
+                    </div>
                 </div>
                 <div id="sessionContainer">
-                    <div id="fakeSessionContainer">
-
-                    </div>
                     <div id="actualSessionContainer" >
 
-                    </div>
-                    <div id="sessionLockContainer">
-                        <svg id="unlockButton" style="width:42px; height:42px;" width="256" height="256" viewBox="0 0 256 256" fill="none"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="128" cy="128" r="128" fill="#3EA6FF" fill-opacity="0.25" />
-                            <circle cx="128" cy="128" r="127.5" stroke="#3EA6FF" stroke-opacity="0.64" />
-                            <path
-                                d="M68 126.659C68 121.357 72.2981 117.059 77.6 117.059H178.4C183.702 117.059 188 121.357 188 126.659V203.195C188 205.846 185.851 207.995 183.2 207.995H72.8C70.149 207.995 68 205.846 68 203.195V126.659Z"
-                                fill="#65B8FF" />
-                            <path fill-rule="evenodd" clip-rule="evenodd"
-                                d="M166.902 124.09L167.125 124.775L100.936 146.219L86.8853 103.099C80.9327 84.832 90.9239 65.223 109.201 59.3015C127.479 53.38 147.121 63.3883 153.074 81.6556L159.73 102.082C161.482 102.928 163.694 103.089 165.323 102.562C166.801 102.083 168.132 100.678 168.944 99.3735L162.206 78.6968C154.611 55.3885 129.548 42.6183 106.227 50.1739C82.9057 57.7295 70.1573 82.7497 77.7527 106.058L91.8038 149.178L94.7782 158.305L103.911 155.347L170.099 133.903L179.232 130.944L176.258 121.817L176.154 121.498C175.551 123.201 174.42 124.394 172.627 124.975C170.436 125.684 168.565 125.326 166.902 124.09Z"
-                                fill="#65B8FF" />
-                        </svg>
-                        <svg id="lockButton" style="display: none; width:24px; height:24px;" width="256" height="256" viewBox="0 0 256 256" fill="none"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="128" cy="128" r="128" fill="white" fill-opacity="0.25" />
-                            <circle cx="128" cy="128" r="127.5" stroke="white" stroke-opacity="0.64" />
-                            <path
-                                d="M68 120.4C68 115.098 72.2981 110.8 77.6 110.8H178.4C183.702 110.8 188 115.098 188 120.4V197.2C188 199.851 185.851 202 183.2 202H72.8C70.149 202 68 199.851 68 197.2V120.4Z"
-                                fill="white" />
-                            <path
-                                d="M167.6 96.4V146.8H88.4001V96.4C88.4001 74.5295 106.13 56.8 128 56.8C149.871 56.8 167.6 74.5295 167.6 96.4Z"
-                                stroke="white" stroke-width="9.6" />
-                        </svg>
                     </div>
                 </div>
             </div>

@@ -1,436 +1,812 @@
 import { summaryHandling } from "./summary.js";
 import { alignmentHandling } from "./alignment.js";
 import { infoHandling } from "./info.js";
-import { pullStorage, pushStorage, removeSpecificStorage, removeStorage, updateRules } from "./Utility.js";
+import {
+  pullStorage,
+  pushStorage,
+  removeStorage,
+  updateRules,
+  getUserInfo,
+  syncProfilesToDrive,
+  fetchProfilesFromDrive,
+  generateUUID
+} from "./Utility.js";
 
+const CLIENT_ID = chrome.runtime.getManifest().oauth2.client_id;
+const API_KEY= chrome.runtime.getManifest().oauth2.key;
+//const CLIENT_ID='741512590350-q9coj4mbvjei61ojgv4jq58i9k9rmdvi.apps.googleusercontent.com';
+//=======================================================================================
 
-document.addEventListener('DOMContentLoaded', function () {
-    setTopBarButtonsListeners();
+/*
+  chrome.identity.getAuthToken({ interactive: true }, function(token) {
+    if (chrome.runtime.lastError) {
+      console.error(chrome.runtime.lastError);
+    } else {
+      getUserInfo(token, function(userInfo) {
+        console.log('User Info:', userInfo);
+        // Handle user info locally
+      });
+    }
+  });
+
+  chrome.identity.getAuthToken({ interactive: true }, function(token) {
+    if (chrome.runtime.lastError) {
+      console.error(chrome.runtime.lastError);
+    } else {
+      const profiles = { };
+      syncProfilesToDrive(token, profiles, function(response) {
+        console.log('Sync response:', response);
+      });
+    }
+  });
+
+  chrome.identity.getAuthToken({ interactive: true }, function(token) {
+    if (chrome.runtime.lastError) {
+      console.error(chrome.runtime.lastError);
+    } else {
+      fetchProfilesFromDrive(token, function(profiles) {
+        console.log('Profiles:', profiles);
+        // Handle profiles locally
+      });
+    }
+  });
+*/
+//=============================================================
+document.addEventListener("DOMContentLoaded", function () {
+  setTopBarButtonsListeners();
 });
 
+/*
+  document.getElementById("popupSignInButton").addEventListener("click", function () {
+    chrome.identity.getAuthToken({ interactive: true }, function (token) {
+      if (chrome.runtime.lastError) {
+        console.error(chrome.runtime.lastError);
+      } else {
+        getUserInfo(token, async function (userInfo) {
+           await pushStorage('tempp',userInfo);
+          console.log("User Info:", userInfo);
+          // Handle user info locally
+        });
+      }
+    });
+  });
+});*/
 
-let listItems = document.getElementsByClassName('bottomBarButtonsATags');
+async function authenticateAccount() {
+  return new Promise((resolve, reject) => {
+    chrome.identity.launchWebAuthFlow(
+      {
+        url: `https://accounts.google.com/o/oauth2/auth?client_id=${encodeURIComponent(
+          CLIENT_ID
+        )}&response_type=token&redirect_uri=https://${
+          chrome.runtime.id
+        }.chromiumapp.org&scope=${encodeURIComponent(
+          "openid email profile https://www.googleapis.com/auth/drive.file"
+        )}`,
+        interactive: true,
+      },
+      function (redirect_url) {
+        if (chrome.runtime.lastError || !redirect_url) {
+          console.error(
+            "Error during authentication:",
+            chrome.runtime.lastError
+          );
+          reject(chrome.runtime.lastError);
+        } else {
+          console.log("Redirect URL:", redirect_url);
+          // Extract the token from the redirect URL
+          const urlParams = new URLSearchParams(
+            new URL(redirect_url).hash.substring(1)
+          );
+          const token = urlParams.get("access_token");
+          if (token) {
+            console.log("Access Token granted");
+            resolve(token);
+          } else {
+            reject(new Error("Access token not found in the response."));
+          }
+        }
+      }
+    );
+  });
+}
+
+async function handleAccounts() {
+  const account = await pullStorage("account");
+  if (account.length !== 0) {
+    flipPopupToSignedIn(account[0]);
+    let rightB = document.getElementById("redButtonAnch");
+    rightB = removeAllEventListeners(rightB);
+    rightB.addEventListener("click", async function (event) {
+      event.preventDefault();
+      await removeStorage("account");
+      flipPopupToLoggedOff();
+    });
+  } 
+    document
+      .getElementById("popupSignInButton")
+      .addEventListener("click", async function () {
+        const token = await authenticateAccount();
+        getUserInfo(token, async function (userInfo) {
+          await pushStorage("account", userInfo);
+          console.log("User Info:", userInfo);
+          await downloadFromGoogle();
+        });
+      });
+  
+}
+
+async function uploadToGoogle() {
+  const token = await authenticateAccount();
+  await updateProfile();
+  const profiles = await pullStorage('profiles');
+  syncProfilesToDrive(token,profiles, function(response) {
+    console.log('Sync response:', response);
+  });
+}
+
+async function downloadFromGoogle() {
+  const token = await authenticateAccount();
+  fetchProfilesFromDrive(token,API_KEY, async function (profiles) {
+    if(!profiles){
+        await updateProfile();
+        const profiles = await pullStorage('profiles');
+        syncProfilesToDrive(token,profiles, function(response) {
+          console.log('Sync response:', response);
+        });
+        flipPopupToSignedIn((await pullStorage('account'))[0]);
+    }else{
+      console.log("Profiles: ", profiles);
+        triggerConflictDialog(token,profiles);
+    }
+    //console.log("Profiles:", profiles);
+    // Handle profiles locally
+  });
+}
+
+function triggerConflictDialog(token,profiles) {
+  document.getElementById("accountWarningPrompt").style.display = "flex";
+  document.getElementById("accountNotSignedInContainer").style.display = "none";
+
+  const cloudB=document.getElementById('keepCloudButton');
+  const localB=document.getElementById('keepLocalButton');
+
+  cloudB.addEventListener('click',async function(){
+    await removeStorage('profiles');
+    await pushStorage('profiles',profiles);
+    flipPopupToSignedIn((await pullStorage('account'))[0]);
+    document.getElementById('actualSessionContainer').replaceChildren();
+    loadProfiles();
+  });
+
+  localB.addEventListener('click',async function(){
+    await updateProfile();
+    const profiles = await pullStorage('profiles');
+    syncProfilesToDrive(token,profiles, function(response) {
+      console.log('Sync response:', response);
+    });
+    flipPopupToSignedIn((await pullStorage('account'))[0]);
+  });
+}
+
+function flipPopupToSignedIn(account) {
+  document.getElementById("accountTripleContainer").style.display = "flex";
+  document.getElementById("accountNotSignedInContainer").style.display = "none";
+  document.getElementById("accountWarningPrompt").style.display = "none";
+  document.getElementById("popupAccountImage").src = account.picture;
+  document.getElementById("popupAccountName").textContent = account.name;
+  document.getElementById("popupAccountEmail").textContent = account.email;
+  document.getElementById("redButtonAnch").style.visibility = "visible";
+  document.getElementById("redButton").style.backgroundColor = "#db3f42";
+  document.getElementById("redButton").textContent = "Sign Out";
+
+  let rightB = document.getElementById("redButtonAnch");
+  rightB = removeAllEventListeners(rightB);
+  rightB.addEventListener("click", async function (event) {
+    event.preventDefault();
+    await removeStorage("account");
+    flipPopupToLoggedOff();
+  });
+}
+
+function flipPopupToLoggedOff() {
+  document.getElementById("accountTripleContainer").style.display = "none";
+  document.getElementById("accountNotSignedInContainer").style.display = "block";
+  document.getElementById("accountWarningPrompt").style.display = "none";
+  document.getElementById("redButtonAnch").style.visibility = "hidden";
+}
+
+//===================================================================================
+
+let listItems = document.getElementsByClassName("bottomBarButtonsATags");
 let lastClicked;
-let contentDiv = document.getElementById('popUpContentContainer');
+let contentDiv = document.getElementById("popUpContentContainer");
 let lastClicked2 = null;
 //let contentTitle = document.getElementById('contentTitle');
 
 for (let i = 0; i < listItems.length; i++) {
-    listItems[i].addEventListener('click', function (event) {
-        event.preventDefault();
-        let contentFile = this.getAttribute('data-content');
-        fetch(contentFile).then(response => response.text()).then(data => {
-            contentDiv.innerHTML = data;
-            //contentTitle.textContent = this.textContent;
-            if (contentFile === "popup/summary.html") {
-                summaryHandling();
-            } else if (contentFile === "popup/alignment.html") {
-                alignmentHandling();
-            } else if (contentFile === "popup/info.html") {
-                infoHandling();
-            }
-        });
-        if (lastClicked) {
-            lastClicked.classList.remove('clicked');
+  listItems[i].addEventListener("click", function (event) {
+    event.preventDefault();
+    let contentFile = this.getAttribute("data-content");
+    fetch(contentFile)
+      .then((response) => response.text())
+      .then(async (data) => {
+        contentDiv.innerHTML = data;
+        //contentTitle.textContent = this.textContent;
+        if (contentFile === "popup/summary.html") {
+          summaryHandling();
+        } else if (contentFile === "popup/alignment.html") {
+          alignmentHandling();
+        } else if (contentFile === "popup/info.html") {
+          infoHandling();
+          const stuff = await pullStorage("tempp");
+          console.log("hereee " + stuff);
         }
-        this.classList.add('clicked');
-        lastClicked = this;
-    });
+      });
+    if (lastClicked) {
+      lastClicked.classList.remove("clicked");
+    }
+    this.classList.add("clicked");
+    lastClicked = this;
+  });
 }
 listItems[0].click();
 
-
 function setTopBarButtonsListeners() {
-    let profileFlag = true;
-    document.getElementById('xButton').addEventListener('click', function (event) {
-        event.preventDefault();
-        document.getElementById('profileContainer').style.display = 'none';
+  let profileFlag = true;
+  document
+    .getElementById("xButton")
+    .addEventListener("click", function (event) {
+      event.preventDefault();
+      document.getElementById("profileContainer").style.display = "none";
     });
 
-    document.getElementById('profileButton').addEventListener('click', function (event) {
-        event.preventDefault();
-        document.getElementById('profileContainer').style.display = 'flex';
+  document
+    .getElementById("profileButton")
+    .addEventListener("click", function (event) {
+      event.preventDefault();
+      document.getElementById("profileContainer").style.display = "flex";
 
-        if (profileFlag) {
-            handleProfiles();
-            profileFlag = false;
-        }
-
+      if (profileFlag) {
+        handleProfiles();
+        profileFlag = false;
+      }
     });
 }
 
 function handleProfiles() {
-    defineProfileItems();
-    loadProfiles();
-    handleLockListeners();
+  defineProfileItems();
+  handleAccounts();
+  loadProfiles();
+  //handleLockListeners();
 }
 
 async function loadProfiles() {
-    try {
-        let profs = await pullStorage('profiles');
-        let active = await fillProfiles(profs);
-        profs = await pullStorage('profiles');
-        makeProfileSelected(active);
-    } catch (error) {
-        console.error(error);
-    }
+  try {
+    let profs = await pullStorage("profiles");
+    let active = await fillProfiles(profs);
+    //profs = await pullStorage("profiles");
+    await makeProfileSelected(active);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 async function fillProfiles(profs) {
-    try {
-        if (!profs || profs.length === 0) {
-            const defaultP = {
-                isActive: true,
-                name: 'Default Session',
-                password: '',
-                whitelist: [],
-                preferences: [],
-                customs: []
-            };
-            await pushStorage('profiles', [defaultP]);
-            profs = await pullStorage('profiles');
-        }
-
-        const sessionBox = document.getElementById('actualSessionContainer');
-        let selector;
-        let active = 0;
-        for (let i = 0; i < profs.length; i++) {
-            if (profs[i].isActive) {
-                active = i;
-            }
-            let item = document.createElement('profile-item');
-            sessionBox.appendChild(item);
-
-            selector = (item.shadowRoot.childNodes[3]).getElementsByClassName('profileLeftContainer')[0];
-            selector.querySelector('.SessionName').textContent = profs[i].name;
-
-
-            if (i === 0) {
-                selector = (item.shadowRoot.childNodes[3]).getElementsByClassName('profileRightContainer')[0];
-                selector.querySelector('#removeProfileBarButton').style.display = 'none';
-                attatchListerners((item.shadowRoot.childNodes[3]), 1, i);
-            } else {
-                attatchListerners((item.shadowRoot.childNodes[3]), 2, i);
-            }
-
-        }
-        const addb = document.createElement('addprofile-item');
-        sessionBox.appendChild(addb);
-        attatchListerners((addb.shadowRoot.childNodes[3]), 0, -1);
-
-        return active;
-    } catch (error) {
-        console.error(error);
+  try {
+    if (!profs || profs.length === 0) {
+      const defaultP = {
+        id:generateUUID(),
+        isActive: true,
+        name: "Default Session",
+        password: "",
+        whitelist: [],
+        preferences: [],
+        customs: [],
+      };
+      console.log('the new profile default creaction-------------------',defaultP);
+      await pushStorage("profiles", [defaultP]);
+      profs = await pullStorage("profiles");
     }
+
+    const sessionBox = document.getElementById("actualSessionContainer");
+    let selector;
+    let active = 0;
+    for (let i = 0; i < profs.length; i++) {
+      if (profs[i].isActive) {
+        active = profs[i].id;
+      }
+      let item = document.createElement("profile-item");
+      sessionBox.appendChild(item);
+
+      selector = item.shadowRoot.childNodes[3].getElementsByClassName(
+        "profileLeftContainer"
+      )[0];
+      selector.querySelector(".SessionName").textContent = profs[i].name;
+
+      if (i === 0) {
+        selector = item.shadowRoot.childNodes[3].getElementsByClassName(
+          "profileRightContainer"
+        )[0];
+        selector.querySelector("#removeProfileBarButton").style.display =
+          "none";
+        await attatchListerners(item.shadowRoot.childNodes[3], 1, profs[i].id);
+      } else {
+        await attatchListerners(item.shadowRoot.childNodes[3], 2, profs[i].id);
+      }
+    }
+    const addb = document.createElement("addprofile-item");
+    sessionBox.appendChild(addb);
+    await attatchListerners(addb.shadowRoot.childNodes[3], 0, -1);
+
+    return active;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function attatchListerners(item, degree, j) {
+  return new Promise((resolve) => {
+    if (degree === 0) {
+      item.addEventListener("click", async function (eventt) {
+        eventt.preventDefault();
+        eventt.stopPropagation();
+        handleProfileCreation();
+      });
+    }
+    if (degree > 0) {
+      console.log('brah-2');
+      item.addEventListener("click", async function (eventt) {
+        console.log('brah-1');
+        eventt.preventDefault();
+        eventt.stopPropagation();
+  
+        await updateProfile();
+        await restoreProfile(j);
+        console.log('brah');
+        await makeProfileSelected(j);
+      });
+      const editB = item
+        .getElementsByClassName("profileRightContainer")[0]
+        .querySelector("#editProfileBarButton");
+      editB.addEventListener("click", async function (eventt) {
+        eventt.preventDefault();
+        eventt.stopPropagation();
+        handleProfileEditing(j);
+      });
+      //item.disabled = false;
+      //b.style.cursor = 'pointer';
+    }
+    if (degree > 1) {
+      const deleteB = item
+        .getElementsByClassName("profileRightContainer")[0]
+        .querySelector("#removeProfileBarButton");
+      deleteB.addEventListener("click", async function (eventt) {
+        eventt.preventDefault();
+        eventt.stopPropagation();
+
+        handleProfileDeletion(j);
+      });
+    }
+
+    // Call resolve when done
+    resolve();
+  });
+  //customElements.whenDefined(pref).then(() => {
+
+
+  //});
 }
 
 function removeAllEventListeners(element) {
-    // Clone the element, including its attributes but not its event listeners
-    const newElement = element.cloneNode(true);
-    
-    // Replace the original element with the cloned element
-    element.parentNode.replaceChild(newElement, element);
-    return newElement;
-  }
+  // Clone the element, including its attributes but not its event listeners
+  const newElement = element.cloneNode(true);
+
+  // Replace the original element with the cloned element
+  element.parentNode.replaceChild(newElement, element);
+  return newElement;
+}
 
 function handleLockListeners() {
+  document
+    .getElementById("unlockButton")
+    .addEventListener("click", async function (event) {
+      event.preventDefault();
 
-    document.getElementById('unlockButton').addEventListener('click', async function (event) {
+      triggerOntopEvents();
 
+      let backB = document.getElementById("goBackSessionArrow");
+      let rightB = document.getElementById("redButtonAnch");
+
+      document.getElementById("pageTitleProfile").textContent =
+        "Authentication";
+
+      const profiles = await pullStorage("profiles");
+      let sessName = document.getElementById("sessionNameInput");
+      let sessPass = document.getElementById("sessionPasswwordInput");
+      sessName.value = profiles[lastClicked2].name;
+      sessName.disabled = "true";
+      rightB = removeAllEventListeners(rightB);
+      rightB.addEventListener("click", async function (event) {
         event.preventDefault();
-
-        triggerOntopEvents();
-
-        let backB = document.getElementById('goBackSessionArrow');
-        let rightB = document.getElementById('redButtonAnch');
-
-        document.getElementById('pageTitleProfile').textContent = 'Authentication';
-
-        const profiles = await pullStorage('profiles');
-        let sessName = document.getElementById('sessionNameInput');
-        let sessPass = document.getElementById('sessionPasswwordInput');
-        sessName.value = profiles[lastClicked2].name;
-        sessName.disabled = 'true';
-        rightB = removeAllEventListeners(rightB);
-        rightB.addEventListener('click', async function (event) {
-            event.preventDefault();
-            if (sessPass.value === profiles[lastClicked2].password) {
-                const clickEvent = new MouseEvent('click', {
-                    view: window,
-                    bubbles: false,
-                    cancelable: true
-                });
-                backB.dispatchEvent(clickEvent);
-            }
-        });
+        if (sessPass.value === profiles[lastClicked2].password) {
+          const clickEvent = new MouseEvent("click", {
+            view: window,
+            bubbles: false,
+            cancelable: true,
+          });
+          backB.dispatchEvent(clickEvent);
+        }
+      });
     });
 }
 
 function triggerOntopEvents() {
-    document.getElementById('accountContainer').style.display = 'none';
-    document.getElementById('sessionContainer').style.display = 'none';
-    document.getElementById('sessionOntopEventsController').style.display = 'flex';
+  document.getElementById("accountContainer").style.display = "none";
+  document.getElementById("sessionContainer").style.display = "none";
+  document.getElementById("sessionOntopEventsController").style.display =
+    "flex";
 
-    let rightB = document.getElementById('redButtonAnch');
-    let rightdiv = rightB.querySelector('#redButton');
-    let loginStatus = rightB.style.visibility;
+  let rightB = document.getElementById("redButtonAnch");
+  let rightdiv = rightB.querySelector("#redButton");
+  let loginStatus = rightB.style.visibility;
 
-    rightdiv.textContent = 'save';
-    rightB.style.visibility = 'visible';
-    rightB.href = '#';
-    rightdiv.style.backgroundColor = '#3791E0';
+  rightdiv.textContent = "save";
+  rightB.style.visibility = "visible";
+  rightB.href = "#";
+  rightdiv.style.backgroundColor = "#3791E0";
 
-    document.getElementById('xButton').style.display = 'none';
-    let backB = document.getElementById('goBackSessionArrow');
-    backB.style.display = 'block';
+  document.getElementById("xButton").style.display = "none";
+  let backB = document.getElementById("goBackSessionArrow");
+  backB.style.display = "block";
 
-    backB.addEventListener('click', function (event) {
-        event.preventDefault();
-        document.getElementById('accountContainer').style.display = 'flex';
-        document.getElementById('sessionContainer').style.display = 'flex';
-        document.getElementById('sessionOntopEventsController').style.display = 'none';
-        document.getElementById('xButton').style.display = 'block';
-        document.getElementById('pageTitleProfile').textContent = 'Profile'
-        backB.style.display = 'none';
-        rightB.style.visibility = loginStatus;
+  backB.addEventListener("click", function (event) {
+    event.preventDefault();
+    document.getElementById("accountContainer").style.display = "flex";
+    document.getElementById("sessionContainer").style.display = "flex";
+    document.getElementById("sessionOntopEventsController").style.display =
+      "none";
+    document.getElementById("xButton").style.display = "block";
+    document.getElementById("pageTitleProfile").textContent = "Profile";
+    backB.style.display = "none";
+    rightB.style.visibility = loginStatus;
 
-        document.getElementById('eventTopReNewPasswordContainer').style.display = 'none';
-        document.getElementById('eventTopNewPasswordContainer').style.display = 'none';
-    });
+    document.getElementById("eventTopReNewPasswordContainer").style.display =
+      "none";
+    document.getElementById("eventTopNewPasswordContainer").style.display =
+      "none";
+  });
 }
 
 function handleProfileCreation() {
-    triggerOntopEvents();
+  triggerOntopEvents();
 
+  document.getElementById("eventTopReNewPasswordContainer").style.display =
+    "flex";
 
-    document.getElementById('eventTopReNewPasswordContainer').style.display = 'flex';
+  document.getElementById("pageTitleProfile").textContent = "Create Profile";
+  let backB = document.getElementById("goBackSessionArrow");
+  let rightB = document.getElementById("redButtonAnch");
 
-    document.getElementById('pageTitleProfile').textContent = 'Create Profile';
-    let backB = document.getElementById('goBackSessionArrow');
-    let rightB = document.getElementById('redButtonAnch');
+  let sessName = document.getElementById("sessionNameInput");
+  let sessPass = document.getElementById("sessionPasswwordInput");
+  let sessReNewPass = document.getElementById("sessionReNewPasswwordInput");
+  //sessName.value=profiles[lastClicked2].name;
+  //sessName.disabled='true';
+  rightB = removeAllEventListeners(rightB);
+  rightB.addEventListener("click", async function (event) {
+    event.preventDefault();
+    console.log("majde it?");
+    if (sessPass.value === sessReNewPass.value) {
+      let id=generateUUID();
+      const newp = {
+        id:id,
+        isActive: true,
+        name: sessName.value,
+        password: sessPass.value,
+        whitelist: [],
+        preferences: [],
+        customs: [],
+      };
+      console.log('the new profile creation-------------------',newp);
+      await pushStorage("profiles", newp);
+      const sessionBox = document.getElementById("actualSessionContainer");
+      sessionBox.removeChild(sessionBox.lastElementChild);
 
-    let sessName = document.getElementById('sessionNameInput');
-    let sessPass = document.getElementById('sessionPasswwordInput');
-    let sessReNewPass = document.getElementById('sessionReNewPasswwordInput');
-    //sessName.value=profiles[lastClicked2].name;
-    //sessName.disabled='true';
-    rightB = removeAllEventListeners(rightB);
-    rightB.addEventListener('click', async function (event) {
-        event.preventDefault();
-        console.log('majde it?');
-        if (sessPass.value === sessReNewPass.value) {
+      let item = document.createElement("profile-item");
+      sessionBox.appendChild(item);
 
-            const newp = {
-                isActive: true,
-                name: sessName.value,
-                password: sessPass.value,
-                whitelist: [],
-                preferences: [],
-                customs: []
-            };
+      let selector = item.shadowRoot.childNodes[3].getElementsByClassName(
+        "profileLeftContainer"
+      )[0];
+      selector.querySelector(".SessionName").textContent = sessName.value;
+      console.log("majde it?x2");
+      //requestAnimationFrame(() => {
+        console.log('leng '+(sessionBox.children.length - 1));
+        await attatchListerners(
+          item.shadowRoot.childNodes[3],
+          2,
+          (id)
+        );
+      //});
 
-            await pushStorage('profiles', newp);
-            const sessionBox = document.getElementById('actualSessionContainer');
-            sessionBox.removeChild(sessionBox.lastElementChild);
+      const addb = document.createElement("addprofile-item");
+      sessionBox.appendChild(addb);
+      await attatchListerners(addb.shadowRoot.childNodes[3], 0, -1);
 
-            let item = document.createElement('profile-item');
-            sessionBox.appendChild(item);
+      const clickEvent = new MouseEvent("click", {
+        view: window,
+        bubbles: false,
+        cancelable: true,
+      });
+      item.shadowRoot.childNodes[3].dispatchEvent(clickEvent);
+      const acc= await pullStorage("account");
+      console.log('nooooooooooooooooooooooooo')
+      if (acc.length !== 0) {
+        console.log('ineerrrrrrrrrrrrrrrrrr')
+        await uploadToGoogle();
+      }
 
-            let selector = (item.shadowRoot.childNodes[3]).getElementsByClassName('profileLeftContainer')[0];
-            selector.querySelector('.SessionName').textContent = sessName.value;
-            attatchListerners((item.shadowRoot.childNodes[3]), 2, sessionBox.children.length - 1);
+      backB.dispatchEvent(clickEvent);
 
-            const addb = document.createElement('addprofile-item');
-            sessionBox.appendChild(addb);
-            attatchListerners((addb.shadowRoot.childNodes[3]), 0, -1);
-
-            const clickEvent = new MouseEvent('click', {
-                view: window,
-                bubbles: false,
-                cancelable: true
-            });
-            item.dispatchEvent(clickEvent);
-            backB.dispatchEvent(clickEvent);
-        }
-    });
-
+      const account = await pullStorage("account");
+      if (account.length !== 0) {
+        flipPopupToSignedIn(account[0]);
+        //rightB = removeAllEventListeners(rightB);
+        //rightB.addEventListener("click", async function (event) {
+        //  event.preventDefault();
+        //  await removeStorage("account");
+        //  flipPopupToLoggedOff();
+        //});
+      }else{
+        flipPopupToLoggedOff();
+      } 
+    }
+  });
 }
 
 async function handleProfileEditing(j) {
-    triggerOntopEvents();
+  triggerOntopEvents();
 
+  document.getElementById("eventTopNewPasswordContainer").style.display =
+    "flex";
+  document.getElementById("eventTopReNewPasswordContainer").style.display =
+    "flex";
 
-    document.getElementById('eventTopNewPasswordContainer').style.display = 'flex';
-    document.getElementById('eventTopReNewPasswordContainer').style.display = 'flex';
+  document.getElementById("pageTitleProfile").textContent = "Edit Profile";
+  let backB = document.getElementById("goBackSessionArrow");
+  let rightB = document.getElementById("redButtonAnch");
 
-    document.getElementById('pageTitleProfile').textContent = 'Edit Profile';
-    let backB = document.getElementById('goBackSessionArrow');
-    let rightB = document.getElementById('redButtonAnch');
+  let sessName = document.getElementById("sessionNameInput");
+  let sessPass = document.getElementById("sessionPasswwordInput");
+  let sessNewPass = document.getElementById("sessionNewPasswwordInput");
+  let sessReNewPass = document.getElementById("sessionReNewPasswwordInput");
+  let profiles = await pullStorage("profiles");
 
-    let sessName = document.getElementById('sessionNameInput');
-    let sessPass = document.getElementById('sessionPasswwordInput');
-    let sessNewPass = document.getElementById('sessionNewPasswwordInput');
-    let sessReNewPass = document.getElementById('sessionReNewPasswwordInput');
-    let profiles= await pullStorage('profiles');
-    //sessName.value=profiles[lastClicked2].name;
-    //sessName.disabled='true';
-    rightB = removeAllEventListeners(rightB);
-    rightB.addEventListener('click', async function (event) {
-        event.preventDefault();
-        console.log('ppas '+profiles[j].password+j+profiles[j]);
-        if (profiles[j].password === sessPass.value  && sessNewPass.value === sessReNewPass.value) {
-
-            profiles[j].name = sessName.value;
-            if(sessNewPass.value !== ''){
-                profiles[j].password = sessNewPass.password;
-            }
-
-            await removeStorage('profiles');
-            await pushStorage('profiles', profiles);
-            
-            const sessionBox = document.getElementById('actualSessionContainer');
-            sessionBox.children[j].shadowRoot.childNodes[3].getElementsByClassName('profileLeftContainer')[0].querySelector('.SessionName').textContent = sessName.value;
-            const clickEvent = new MouseEvent('click', {
-                view: window,
-                bubbles: false,
-                cancelable: true
-            });
-            backB.dispatchEvent(clickEvent);
-        }
-    });
-
-}
-
-function attatchListerners(item, degree, j) {
-    //customElements.whenDefined(pref).then(() => {
-    if (degree === 0) {
-        item.addEventListener('click', async function (eventt) {
-            eventt.preventDefault();
-            eventt.stopPropagation();
-            handleProfileCreation();
-
-        });
+  let selected=null;
+  for(let i=0;i<profiles.length;i++){
+    if(profiles[i].id === j){
+      selected=i;
+      break;
     }
-    if (degree > 0) {
-        item.addEventListener('click', async function (eventt) {
-            eventt.preventDefault();
-            eventt.stopPropagation();
+  }
+  //sessName.value=profiles[lastClicked2].name;
+  //sessName.disabled='true';
+  rightB = removeAllEventListeners(rightB);
+  rightB.addEventListener("click", async function (event) {
+    event.preventDefault();
+    console.log("ppas " + profiles[selected].password + selected + profiles[selected]);
+    if (
+      profiles[selected].password === sessPass.value &&
+      sessNewPass.value === sessReNewPass.value
+    ) {
+      profiles[selected].name = sessName.value;
+      if (sessNewPass.value !== "") {
+        profiles[selected].password = sessNewPass.value;
+      }
+      console.log('the profile editting-------------------',profiles);
+      await removeStorage("profiles");
+      await pushStorage("profiles", profiles);
 
-            await updateProfile();
-            await restoreProfile(j);
-            makeProfileSelected(j);
-        });
-        const editB = item.getElementsByClassName('profileRightContainer')[0].querySelector('#editProfileBarButton');
-        editB.addEventListener('click', async function (eventt) {
-            eventt.preventDefault();
-            eventt.stopPropagation();
-            handleProfileEditing(j);
-        });
-        //item.disabled = false;
-        //b.style.cursor = 'pointer';
-    }
-    if (degree > 1) {
-        const deleteB = item.getElementsByClassName('profileRightContainer')[0].querySelector('#removeProfileBarButton');
-        deleteB.addEventListener('click', async function (eventt) {
-            eventt.preventDefault();
-            eventt.stopPropagation();
-            handleProfileDeletion(j);
-        });
-    }
-
-    //});
-}
-async function handleProfileDeletion(j){
-    let backB = document.getElementById('goBackSessionArrow');
-    let profiles= await pullStorage('profiles');
-    const sessionBox = document.getElementById('actualSessionContainer');
-    const clickEvent = new MouseEvent('click', {
+      const sessionBox = document.getElementById("actualSessionContainer");
+      sessionBox.children[selected].shadowRoot.childNodes[3]
+        .getElementsByClassName("profileLeftContainer")[0]
+        .querySelector(".SessionName").textContent = sessName.value;
+      const clickEvent = new MouseEvent("click", {
         view: window,
         bubbles: false,
-        cancelable: true
-    });
-    if(profiles[j].isActive){
-        sessionBox.children[0].shadowRoot.childNodes[3].dispatchEvent(clickEvent);
+        cancelable: true,
+      });
+      const acc= await pullStorage("account");
+      if (acc.length !== 0) {
+        await uploadToGoogle();
+      }
+      backB.dispatchEvent(clickEvent);
     }
-    profiles.splice(j,1);
-    await removeStorage('profiles');
-    await pushStorage('profiles', profiles);
-    sessionBox.removeChild(sessionBox.children[j]);
-
-    backB.dispatchEvent(clickEvent);
+  });
 }
+
+async function handleProfileDeletion(j) {
+  let deletionFlag=0;
+  let backB = document.getElementById("goBackSessionArrow");
+  let profiles = await pullStorage("profiles");
+
+  let selected=null;
+  for(let i=0;i<profiles.length;i++){
+    if(profiles[i].id === j){
+      selected=i;
+      break;
+    }
+  }
+  const sessionBox = document.getElementById("actualSessionContainer");
+  const clickEvent = new MouseEvent("click", {
+    view: window,
+    bubbles: false,
+    cancelable: true,
+  });
+
+  if (profiles[selected].isActive) {
+    deletionFlag=1;
+
+  }
+
+  
+  console.log('lenbefore ', profiles.length);
+  //console.dir(j);
+  //console.dir(profiles);
+  //profiles = profiles.filter(item => item.id !== j);
+
+  profiles.splice(selected, 1);
+  console.log('lenbefore ', profiles.length);
+  await removeStorage("profiles");
+  console.log('backlog-------------------');
+  await pushStorage("profiles", profiles);
+  console.log('special ',await pullStorage("profiles"));
+  sessionBox.removeChild(sessionBox.children[selected]);
+
+  if (deletionFlag===1) {
+    sessionBox.children[0].shadowRoot.childNodes[3].dispatchEvent(clickEvent);
+  }
+
+
+  const acc= await pullStorage("account");
+  if (acc.length !== 0) {
+    await uploadToGoogle();
+  }
+  backB.dispatchEvent(clickEvent);
+
+}
+
 async function updateProfile() {
-    let profs = await pullStorage('profiles');
-    profs[lastClicked2].isActive = false;
-    profs[lastClicked2].whitelist = await pullStorage('whitelist');
-    profs[lastClicked2].preferences = await pullStorage('preferences');
-    profs[lastClicked2].customs = await pullStorage('customs');
-    await removeStorage('profiles');
-    await pushStorage('profiles', profs);
+  let profs = await pullStorage("profiles");
+  let selected=null;
+  for(let i=0;i<profs.length;i++){
+    if(profs[i].id === lastClicked2){
+      selected=i;
+      break;
+    }
+  }
+  if(selected!==null){
+    profs[selected].whitelist = await pullStorage("whitelist");
+    profs[selected].preferences = await pullStorage("preferences");
+    profs[selected].customs = await pullStorage("customs");
+    console.log('the profile updating-------------------',profs);
+    await removeStorage("profiles");
+    await pushStorage("profiles", profs);
+}
+  //profs[lastClicked2].isActive = false;
+
+
 }
 
 async function restoreProfile(j) {
-    let profs = await pullStorage('profiles');
-    await removeStorage('swhitelist');
-    await removeStorage('whitelist');
-    await removeStorage('preferences');
-    await removeStorage('customs');
-    await removeStorage('sitepolicy');
-    await removeStorage('profiles');
+  let profs = await pullStorage("profiles");
+  let selected=null;
+  let old=null;
+  for(let i=0;i<profs.length;i++){
+    if(profs[i].id === j){
+      selected=i;
+    }
+    if(profs[i].id === lastClicked2){
+      old=i;
+    }
+    if(selected !== null && old !== null){
+      break;
+    }
+  }
+  if(selected!==null){
+    await removeStorage("swhitelist");
+    await removeStorage("whitelist");
+    await removeStorage("preferences");
+    await removeStorage("customs");
+    await removeStorage("sitepolicy");
+    await removeStorage("profiles");
+  
+    await pushStorage("whitelist", profs[selected].whitelist);
+    await pushStorage("preferences", profs[selected].preferences);
+    await pushStorage("customs", profs[selected].customs);
+    //await pushStorage('whitelist', profs[j].whitelist);
+  
+    if(old !== null){
+      profs[old].isActive = false;
+    }else{
+      profs[0].isActive = false;
+    }
 
-    await pushStorage('whitelist', profs[j].whitelist);
-    await pushStorage('preferences', profs[j].preferences);
-    await pushStorage('customs', profs[j].customs);
-    await pushStorage('whitelist', profs[j].whitelist);
-
-    profs[j].isActive = true;
-    await pushStorage('profiles', profs);
+    profs[selected].isActive = true;
+    console.log('the profile restoring-------------------',profs);
+    await pushStorage("profiles", profs);
     await updateRules();
 }
 
-function makeProfileSelected(j) {
-    const profiles = document.getElementsByTagName('profile-item');
-    const selectedProfile = profiles[j].shadowRoot.childNodes[3];
-    let oldItem;
-    console.log('survived');
-    if (lastClicked2 !== null && profiles[lastClicked2]) {
-        oldItem = profiles[lastClicked2].shadowRoot.childNodes[3];
-        oldItem.style.border = '1px solid #ffffff08';
-        (oldItem.getElementsByClassName('profileLeftContainer')[0].querySelector('#checkProfileBar')).style.visibility = 'hidden';
-        oldItem.style.cursor = 'pointer';
-        oldItem.pointerEvents = 'auto';
+}
+
+async function makeProfileSelected(j) {
+  console.log('jj ',j);
+  let profs = await pullStorage("profiles");
+  console.log('jasdx ',profs);
+  let selected=null;
+  let old=null;
+  
+  for(let i=0;i<profs.length;i++){
+    if(profs[i].id === j){
+      selected=i;
     }
+    if(profs[i].id === lastClicked2){
+      old=i;
+    }
+    if(selected !== null && old !== null){
+      break;
+    }
+  }
 
-    selectedProfile.style.cursor = 'default';
-    selectedProfile.pointerEvents = 'none';
-    selectedProfile.style.border = '1px solid #3791E0';
-    (selectedProfile.getElementsByClassName('profileLeftContainer')[0].querySelector('#checkProfileBar')).style.visibility = 'visible';
+  console.log('backdoor '+selected);
+  const profiles = document.getElementsByTagName("profile-item");
+  const selectedProfile = profiles[selected].shadowRoot.childNodes[3];
+  let oldItem;
+  console.log("survived");
+  if (old !== null && profiles[old]) {
+    oldItem = profiles[old].shadowRoot.childNodes[3];
+    oldItem.style.border = "1px solid #ffffff08";
+    oldItem
+      .getElementsByClassName("profileLeftContainer")[0]
+      .querySelector("#checkProfileBar").style.visibility = "hidden";
+    oldItem.style.cursor = "pointer";
+    oldItem.pointerEvents = "auto";
+  }
 
-    lastClicked2 = j;
+  selectedProfile.style.cursor = "default";
+  selectedProfile.pointerEvents = "none";
+  selectedProfile.style.border = "1px solid #3791E0";
+  selectedProfile
+    .getElementsByClassName("profileLeftContainer")[0]
+    .querySelector("#checkProfileBar").style.visibility = "visible";
+
+  lastClicked2 = j;
 }
 //==============================================================================
 
 function defineProfileItems() {
-    if (!customElements.get('profile-item')) {
-        customElements.define('profile-item', profileItem);
-        customElements.define('addprofile-item', addProfileItem);
-    }
+  if (!customElements.get("profile-item")) {
+    customElements.define("profile-item", profileItem);
+    customElements.define("addprofile-item", addProfileItem);
+  }
 }
 
 class profileItem extends HTMLElement {
-    constructor() {
-        super();
-        this.attachShadow({ mode: 'open' });
-    }
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+  }
 
-    connectedCallback() {
-        this.shadowRoot.innerHTML = `
+  connectedCallback() {
+    this.shadowRoot.innerHTML = `
             <style>
 .profileBarContainer{
     display: flex;
     justify-content: space-between;
     background-color: #232325;
-    width: 100%;
+    width: 16rem;
     height: 2.8rem;
     align-items: center;
     border-radius: 14px;
@@ -497,23 +873,23 @@ class profileItem extends HTMLElement {
                         </div>
                     </div>
         `;
-    }
+  }
 }
 
 class addProfileItem extends HTMLElement {
-    constructor() {
-        super();
-        this.attachShadow({ mode: 'open' });
-    }
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+  }
 
-    connectedCallback() {
-        this.shadowRoot.innerHTML = `
+  connectedCallback() {
+    this.shadowRoot.innerHTML = `
             <style>
 .profileBarContainer{
     display: flex;
     justify-content: space-between;
     background-color: #232325;
-    width: 100%;
+    width: 16rem;
     height: 2.8rem;
     align-items: center;
     border-radius: 14px;
@@ -548,5 +924,5 @@ class addProfileItem extends HTMLElement {
                         </div>
                     </div>
         `;
-    }
+  }
 }

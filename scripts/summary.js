@@ -17,10 +17,12 @@ async function modifyPage(){
         // Check if the URL is restricted
         if (url.startsWith('chrome://') || url.startsWith('chrome-extension://') || url.startsWith('file://')) {
             //console.warn('Content scripts cannot run on this page.');
+            let resultDiv=document.getElementById('summaryContentResultContainer');
             let headDiv= document.getElementById('summaryContentDisplayContainerHeader');
             let bodyDiv= document.getElementById('summaryContentDisplayContainerBody');
             let emptyDiv= document.getElementById('summaryContentDisplayContainerEmpty');
             setListEmpty(headDiv,bodyDiv,emptyDiv);
+            resultDiv.style.visibility='hidden';
             //return;
         }else{
             chrome.tabs.sendMessage(tabs[0].id, { action: 'get_current_url' }, async function(response) {

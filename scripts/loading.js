@@ -1,6 +1,12 @@
-import { pushStorage, updateRules,pushSitePolicyStorage } from './Utility.js';
-import { trimUrl } from './Utility.js';
+import { trimUrl,pullStorage,pushStorage, updateRules,pushSitePolicyStorage } from './Utility.js';
+import { getPredefinedPreferences } from './preferences.js';
+
 chrome.storage.local.get('currentURL', async function (result) {
+  let strg = await pullStorage('preferences');
+  if(strg.length ===0){
+    await pushStorage("preferences",getPredefinedPreferences(1));
+  }
+
   const currentURL = result.currentURL;
   if (currentURL) {
     await modifyPage(currentURL);

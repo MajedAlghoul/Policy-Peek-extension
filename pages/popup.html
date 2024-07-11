@@ -33,7 +33,7 @@
             <div id="profileContainer">
                 <div id="nvBar">
                     <a id="xButton" href=""><img style="margin-left: 10px; width: 15px;height:15px;" src="../images/x.png" alt=""></a>
-                    <svg id="goBackSessionArrow" style="display: none; width: 15px; height:15px; cursor:pointer;" width="256" height="216" viewBox="0 0 256 216" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg id="goBackSessionArrow" style="margin-left: 10px; display: none; width: 15px; height:15px; cursor:pointer;" width="256" height="216" viewBox="0 0 256 216" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M16 107.772H240" stroke="white" stroke-width="31.7588" stroke-linecap="round"/>
                         <path d="M16 107.769L105.544 16.9999" stroke="white" stroke-width="31.7588" stroke-linecap="round"/>
                         <path d="M16 107.769L105.095 199" stroke="white" stroke-width="31.7588" stroke-linecap="round"/>
@@ -45,32 +45,32 @@
                 </div>
 
                 <div id="sessionOntopEventsController" style="display: none;">
-                    <div id="eventTopText">
-                        Enter current session's password to make changes on sessions
+                    <div id="eventTopText" >
+
                     </div>
-                    <div id="eventTopSessionNameContainer">
-                        <label for="sessionNameInput">
+                    <div id="eventTopSessionNameContainer" class="popupInputContainers">
+                        <label for="sessionNameInput" class="popupLabels">
                             Session Name
                         </label>
-                        <input type="text" id="sessionNameInput">
+                        <input type="text" class="popupInputs" id="sessionNameInput">
                     </div>
-                    <div id="eventTopCurrentPasswordContainer">
-                        <label for="sessionPasswwordInput">
+                    <div id="eventTopCurrentPasswordContainer" class="popupInputContainers">
+                        <label for="sessionPasswwordInput" class="popupLabels">
                             Session Password
                         </label>
-                        <input type="text" id="sessionPasswwordInput">
+                        <input type="text" class="popupInputs" id="sessionPasswwordInput">
                     </div>
-                    <div id="eventTopNewPasswordContainer" style="display: none;">
-                        <label for="sessionNewPasswwordInput">
+                    <div id="eventTopNewPasswordContainer" style="display: none;" class="popupInputContainers">
+                        <label for="sessionNewPasswwordInput" class="popupLabels">
                             New Password
                         </label>
-                        <input type="text" id="sessionNewPasswwordInput">
+                        <input type="text" class="popupInputs" id="sessionNewPasswwordInput">
                     </div>
-                    <div id="eventTopReNewPasswordContainer" style="display: none;">
-                        <label for="sessionReNewPasswwordInput">
+                    <div id="eventTopReNewPasswordContainer" style="display: none;" class="popupInputContainers">
+                        <label for="sessionReNewPasswwordInput" class="popupLabels">
                             Re-type Password
                         </label>
-                        <input type="text" id="sessionReNewPasswwordInput">
+                        <input type="text" class="popupInputs" id="sessionReNewPasswwordInput">
                     </div>
 
                 </div>
@@ -101,7 +101,31 @@
                     </div>
                 </div>
                 <div id="sessionContainer">
-                    <div id="actualSessionContainer" >
+                    <div id="defaultSessionContainer" >
+                        <div  class="addSessionBar">
+                            <div class="profileLeftContainer">
+                                <svg id="addSessionPlusSign" class="addSessionPlusIcon" style="width: 18px;height:18px; margin-bottom: 2px;" width="7" height="7" viewBox="0 0 7 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3.5 6L3.5 1" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+                                    <path d="M1 3.5H6" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+                                </svg>
+    
+                                <div class="SessionName" style="margin-left: 10px;">
+                                    Add Session
+                                </div>
+                            </div>
+                        </div>
+                        <div id="popupSessionLockButton">
+                            <svg id="unlockIcon" style="height:24px;" width="192" height="256" viewBox="0 0 192 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M-0.00292969 125.856C-0.00292969 117.372 6.87418 110.495 15.3575 110.495H176.637C185.12 110.495 191.997 117.372 191.997 125.856V248.317C191.997 252.558 188.559 255.997 184.317 255.997H7.6773C3.43563 255.997 -0.00292969 252.558 -0.00292969 248.317V125.856Z" fill="#65B8FF"/>
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M158.241 121.745L158.598 122.842L52.6969 157.152L30.2139 88.1566C20.6897 58.929 36.6756 27.5548 65.9194 18.0805C95.1631 8.60612 126.591 24.6193 136.115 53.8469L146.766 86.5315C149.569 87.8839 153.107 88.1427 155.714 87.298C158.079 86.5318 160.21 84.2842 161.509 82.1967L150.728 49.1127C138.575 11.8192 98.4744 -8.61312 61.1602 3.47587C23.8461 15.5649 3.44863 55.5973 15.6012 92.8908L38.0842 161.886L42.8433 176.49L57.456 171.756L163.357 137.446L177.97 132.712L173.211 118.108L173.044 117.596C172.079 120.321 170.269 122.231 167.4 123.16C163.896 124.296 160.902 123.723 158.241 121.745Z" fill="#65B8FF"/>
+                            </svg>
+                            <svg id="lockIcon" style="height:24px; display:none;" width="192" height="256" viewBox="0 0 192 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M0 116.736C0 107.687 7.33537 100.352 16.384 100.352H175.616C184.665 100.352 192 107.687 192 116.736V247.808C192 252.332 188.332 256 183.808 256H8.192C3.66768 256 0 252.332 0 247.808V116.736Z" fill="white"/>
+                                    <path d="M158.848 71.04V161.792H33.152V71.0401C33.152 36.3301 61.29 8.192 96 8.192C130.71 8.192 158.848 36.33 158.848 71.04Z" stroke="white" stroke-width="16.384"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div id="actualSessionContainer">
 
                     </div>
                 </div>

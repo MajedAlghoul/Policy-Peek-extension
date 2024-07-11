@@ -204,7 +204,7 @@ function adjustLines(freeBox) {
     }
 }
 
-function getPredefinedPreferences(j) {
+export function getPredefinedPreferences(j) {
     if (j === 0) {
         return loadLevel0();
     } else if (j === 1) {

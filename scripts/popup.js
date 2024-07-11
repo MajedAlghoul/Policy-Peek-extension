@@ -12,11 +12,11 @@ import {
   generateUUID,
   authenticateAccount,
   uploadToGoogle,
-  updateProfile
+  updateProfile,
 } from "./Utility.js";
 
 const CLIENT_ID = chrome.runtime.getManifest().oauth2.client_id;
-const API_KEY= chrome.runtime.getManifest().oauth2.key;
+const API_KEY = chrome.runtime.getManifest().oauth2.key;
 //const CLIENT_ID='741512590350-q9coj4mbvjei61ojgv4jq58i9k9rmdvi.apps.googleusercontent.com';
 //=======================================================================================
 
@@ -75,8 +75,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });*/
 
-
-
 async function handleAccounts() {
   const account = await pullStorage("account");
   if (account.length !== 0) {
@@ -88,68 +86,67 @@ async function handleAccounts() {
       await removeStorage("account");
       flipPopupToLoggedOff();
     });
-  } 
-    document
-      .getElementById("popupSignInButton")
-      .addEventListener("click", async function () {
-        const token = await authenticateAccount();
-        getUserInfo(token, async function (userInfo) {
-          await pushStorage("account", userInfo);
-          console.log("User Info:", userInfo);
-          await downloadFromGoogle();
-        });
+  }
+  document
+    .getElementById("popupSignInButton")
+    .addEventListener("click", async function () {
+      const token = await authenticateAccount();
+      getUserInfo(token, async function (userInfo) {
+        await pushStorage("account", userInfo);
+        console.log("User Info:", userInfo);
+        await downloadFromGoogle();
       });
-  
+    });
 }
 
 async function downloadFromGoogle() {
   const token = await authenticateAccount();
-  fetchProfilesFromDrive(token,API_KEY, async function (profiles) {
-    if(!profiles){
-        //await updateProfile();
-        const profiles = await pullStorage('profiles');
-        syncProfilesToDrive(token,profiles, function(response) {
-          console.log('Sync response:', response);
-        });
-        flipPopupToSignedIn((await pullStorage('account'))[0]);
-    }else{
+  fetchProfilesFromDrive(token, API_KEY, async function (profiles) {
+    if (!profiles) {
+      //await updateProfile();
+      const profiles = await pullStorage("profiles");
+      syncProfilesToDrive(token, profiles, function (response) {
+        console.log("Sync response:", response);
+      });
+      flipPopupToSignedIn((await pullStorage("account"))[0]);
+    } else {
       console.log("Profiles: ", profiles);
-      triggerConflictDialog(token,profiles);
+      triggerConflictDialog(token, profiles);
     }
     //console.log("Profiles:", profiles);
     // Handle profiles locally
   });
 }
 
-function triggerConflictDialog(token,profiles) {
+function triggerConflictDialog(token, profiles) {
   document.getElementById("accountWarningPrompt").style.display = "flex";
   document.getElementById("accountNotSignedInContainer").style.display = "none";
 
-  const cloudB=document.getElementById('keepCloudButton');
-  const localB=document.getElementById('keepLocalButton');
+  const cloudB = document.getElementById("keepCloudButton");
+  const localB = document.getElementById("keepLocalButton");
 
-  cloudB.addEventListener('click',async function(){
-    await removeStorage('profiles');
-    await pushStorage('profiles',profiles);
+  cloudB.addEventListener("click", async function () {
+    await removeStorage("profiles");
+    await pushStorage("profiles", profiles);
     for (let index = 0; index < profiles.length; index++) {
-      if(profiles[index].isActive){
+      if (profiles[index].isActive) {
         await restoreProfile(profiles[index].id);
         break;
       }
     }
 
-    flipPopupToSignedIn((await pullStorage('account'))[0]);
-    document.getElementById('actualSessionContainer').replaceChildren();
+    flipPopupToSignedIn((await pullStorage("account"))[0]);
+    document.getElementById("actualSessionContainer").replaceChildren();
     loadProfiles();
   });
 
-  localB.addEventListener('click',async function(){
+  localB.addEventListener("click", async function () {
     //await updateProfile();
-    const profiles = await pullStorage('profiles');
-    syncProfilesToDrive(token,profiles, function(response) {
-      console.log('Sync response:', response);
+    const profiles = await pullStorage("profiles");
+    syncProfilesToDrive(token, profiles, function (response) {
+      console.log("Sync response:", response);
     });
-    flipPopupToSignedIn((await pullStorage('account'))[0]);
+    flipPopupToSignedIn((await pullStorage("account"))[0]);
   });
 }
 
@@ -175,7 +172,8 @@ function flipPopupToSignedIn(account) {
 
 function flipPopupToLoggedOff() {
   document.getElementById("accountTripleContainer").style.display = "none";
-  document.getElementById("accountNotSignedInContainer").style.display = "block";
+  document.getElementById("accountNotSignedInContainer").style.display =
+    "block";
   document.getElementById("accountWarningPrompt").style.display = "none";
   document.getElementById("redButtonAnch").style.visibility = "hidden";
 }
@@ -238,11 +236,17 @@ function setTopBarButtonsListeners() {
     });
 }
 
-function handleProfiles() {
+async function handleProfiles() {
   defineProfileItems();
   handleAccounts();
   loadProfiles();
-  //handleLockListeners();
+  handleLockListeners();
+  let addB = document.getElementsByClassName("addSessionBar")[0];
+  await attatchListerners(addB, 0, -1);
+  addB.id = "makeBarDisabled";
+  addB.querySelector(".SessionName").id = "DisabledSessionName";
+  addB.querySelector(".addSessionPlusIcon").id = "addSessionPlusSign";
+  addB.style.pointerEvents = "none";
 }
 
 async function loadProfiles() {
@@ -260,7 +264,7 @@ async function fillProfiles(profs) {
   try {
     if (!profs || profs.length === 0) {
       const defaultP = {
-        id:generateUUID(),
+        id: generateUUID(),
         isActive: true,
         name: "Default Session",
         password: "",
@@ -268,7 +272,10 @@ async function fillProfiles(profs) {
         preferences: [],
         customs: [],
       };
-      console.log('the new profile default creaction-------------------',defaultP);
+      console.log(
+        "the new profile default creaction-------------------",
+        defaultP
+      );
       await pushStorage("profiles", [defaultP]);
       profs = await pullStorage("profiles");
     }
@@ -276,10 +283,13 @@ async function fillProfiles(profs) {
     const sessionBox = document.getElementById("actualSessionContainer");
     let selector;
     let active = 0;
+
+    if (profs.length === 1) {
+      document.getElementById("actualSessionContainer").style.marginLeft =
+        "0.9rem";
+    }
+
     for (let i = 0; i < profs.length; i++) {
-      if (profs[i].isActive) {
-        active = profs[i].id;
-      }
       let item = document.createElement("profile-item");
       sessionBox.appendChild(item);
 
@@ -298,10 +308,36 @@ async function fillProfiles(profs) {
       } else {
         await attatchListerners(item.shadowRoot.childNodes[3], 2, profs[i].id);
       }
+
+      selector = item.shadowRoot.childNodes[3];
+
+      if (profs[i].isActive) {
+        active = profs[i].id;
+        selector.style.border = "1px solid #3791E050";
+        selector
+          .getElementsByClassName("profileLeftContainer")[0]
+          .querySelector("#checkProfileBar")
+          .classList.add("leftProfileButtonsCheckDisable");
+
+      }
+      //else{
+        selector.style.pointerEvents = "none";
+      selector.id = "makeBarDisabled";
+      selector.querySelector(".SessionName").id = "DisabledSessionName";
+
+      selector
+        .getElementsByClassName("profileRightContainer")[0]
+        .querySelector("#editProfileBarButton")
+        .classList.add("rightProfileButtonsEditDisable");
+      selector
+        .getElementsByClassName("profileRightContainer")[0]
+        .querySelector("#removeProfileBarButton")
+        .classList.add("rightProfileButtonsRemoveDisable");
+      //}
     }
-    const addb = document.createElement("addprofile-item");
-    sessionBox.appendChild(addb);
-    await attatchListerners(addb.shadowRoot.childNodes[3], 0, -1);
+    //const addb = document.createElement("addprofile-item");
+    //sessionBox.appendChild(addb);
+    //await attatchListerners(addb.shadowRoot.childNodes[3], 0, -1);
 
     return active;
   } catch (error) {
@@ -319,19 +355,19 @@ async function attatchListerners(item, degree, j) {
       });
     }
     if (degree > 0) {
-      console.log('brah-2');
+      console.log("brah-2");
       item.addEventListener("click", async function (eventt) {
-        console.log('brah-1');
+        console.log("brah-1");
         eventt.preventDefault();
         eventt.stopPropagation();
-  
+
         //await updateProfile();
         await restoreProfile(j);
-        const acc= await pullStorage("account");
+        const acc = await pullStorage("account");
         if (acc.length !== 0) {
           await uploadToGoogle();
         }
-        console.log('brah');
+        console.log("brah");
         await makeProfileSelected(j);
       });
       const editB = item
@@ -362,7 +398,6 @@ async function attatchListerners(item, degree, j) {
   });
   //customElements.whenDefined(pref).then(() => {
 
-
   //});
 }
 
@@ -376,9 +411,9 @@ function removeAllEventListeners(element) {
 }
 
 function handleLockListeners() {
-  document
-    .getElementById("unlockButton")
-    .addEventListener("click", async function (event) {
+  let lockB = document.getElementById("popupSessionLockButton");
+  if (lockB.querySelector("#unlockIcon").style.display !== "none") {
+    lockB.addEventListener("click", async function (event) {
       event.preventDefault();
 
       triggerOntopEvents();
@@ -388,16 +423,86 @@ function handleLockListeners() {
 
       document.getElementById("pageTitleProfile").textContent =
         "Authentication";
+      document.getElementById("eventTopText").textContent =
+        "Enter current session's password to make changes on sessions";
 
       const profiles = await pullStorage("profiles");
       let sessName = document.getElementById("sessionNameInput");
       let sessPass = document.getElementById("sessionPasswwordInput");
-      sessName.value = profiles[lastClicked2].name;
+
+      let selected;
+      for (let index = 0; index < profiles.length; index++) {
+        if (profiles[index].isActive) {
+          selected = profiles[index];
+          break;
+        }
+      }
+
+      sessName.value = selected.name;
       sessName.disabled = "true";
+      sessName.style.boxShadow = "none";
+      sessName.style.color = "#5f5f60";
+
       rightB = removeAllEventListeners(rightB);
       rightB.addEventListener("click", async function (event) {
         event.preventDefault();
-        if (sessPass.value === profiles[lastClicked2].password) {
+        if (sessPass.value === selected.password) {
+          lockB.querySelector("#unlockIcon").style.display = "none";
+          lockB.querySelector("#lockIcon").style.display = "block";
+
+          lockB = removeAllEventListeners(lockB);
+          handleLockListeners();
+
+          let addB = document.getElementsByClassName("addSessionBar")[0];
+          //await attatchListerners(addB, 0, -1);
+          addB.id = "";
+          addB.querySelector(".SessionName").id = "";
+          addB.querySelector(".addSessionPlusIcon").id = "";
+          addB.style.pointerEvents = "auto";
+
+          const sessionBox = document.getElementById(
+            "actualSessionContainer"
+          ).children;
+          let tempP;
+          for (let index = 0; index < sessionBox.length; index++) {
+            tempP = sessionBox[index].shadowRoot.childNodes[3];
+            if (
+              tempP
+                .getElementsByClassName("profileLeftContainer")[0]
+                .querySelector("#checkProfileBar").style.visibility !== "hidden"
+            ) {
+              tempP.style.border = "1px solid #3791E0";
+              tempP
+                .getElementsByClassName("profileLeftContainer")[0]
+                .querySelector("#checkProfileBar")
+                .classList.remove("leftProfileButtonsCheckDisable");
+                tempP.style.pointerEvents = "none";
+                tempP
+                .getElementsByClassName("profileRightContainer")[0].querySelector('#editProfileBarButton').style.cursor='pointer';
+                tempP.getElementsByClassName("profileRightContainer")[0].querySelector('#editProfileBarButton').style.pointerEvents='auto';
+                tempP
+                .getElementsByClassName("profileRightContainer")[0].querySelector('#removeProfileBarButton').style.cursor='pointer';
+                tempP.getElementsByClassName("profileRightContainer")[0].querySelector('#removeProfileBarButton').style.pointerEvents='auto';
+            }else{
+              tempP.style.cursor="pointer";
+              tempP.style.pointerEvents = "auto";
+            }
+            tempP.id = "";
+            tempP.querySelector(".SessionName").id = "";
+
+            tempP
+              .getElementsByClassName("profileRightContainer")[0]
+              .querySelector("#editProfileBarButton")
+              .classList.remove("rightProfileButtonsEditDisable");
+            tempP
+              .getElementsByClassName("profileRightContainer")[0]
+              .querySelector("#removeProfileBarButton")
+              .classList.remove("rightProfileButtonsRemoveDisable");
+          }
+
+          sessName.value = "";
+          sessName.disabled = "";
+
           const clickEvent = new MouseEvent("click", {
             view: window,
             bubbles: false,
@@ -407,6 +512,59 @@ function handleLockListeners() {
         }
       });
     });
+  } else {
+    lockB.addEventListener("click", async function (event) {
+      event.preventDefault();
+
+      let addB = document.getElementsByClassName("addSessionBar")[0];
+      //await attatchListerners(addB, 0, -1);
+      addB.id = "makeBarDisabled";
+      addB.querySelector(".SessionName").id = "DisabledSessionName";
+      addB.querySelector(".addSessionPlusIcon").id = "addSessionPlusSign";
+      addB.style.pointerEvents = "none";
+
+      const sessionBox = document.getElementById(
+        "actualSessionContainer"
+      ).children;
+      let tempP;
+      for (let index = 0; index < sessionBox.length; index++) {
+        tempP = sessionBox[index].shadowRoot.childNodes[3];
+        if (
+          tempP
+            .getElementsByClassName("profileLeftContainer")[0]
+            .querySelector("#checkProfileBar").style.visibility !== "hidden"
+        ) {
+          tempP.style.border = "1px solid #3791E050";
+          tempP
+            .getElementsByClassName("profileLeftContainer")[0]
+            .querySelector("#checkProfileBar")
+            .classList.add("leftProfileButtonsCheckDisable");
+            tempP.getElementsByClassName("profileRightContainer")[0].querySelector('#editProfileBarButton').style.pointerEvents='none';
+            tempP.getElementsByClassName("profileRightContainer")[0].querySelector('#editProfileBarButton').style.cursor='auto';
+            tempP.getElementsByClassName("profileRightContainer")[0].querySelector('#removeProfileBarButton').style.pointerEvents='none';
+            tempP.getElementsByClassName("profileRightContainer")[0].querySelector('#removeProfileBarButton').style.cursor='auto';
+        }
+        tempP.id = "makeBarDisabled";
+        tempP.querySelector(".SessionName").id = "DisabledSessionName";
+        tempP.style.pointerEvents = "none";
+        tempP
+          .getElementsByClassName("profileRightContainer")[0]
+          .querySelector("#editProfileBarButton")
+          .classList.add("rightProfileButtonsEditDisable");
+        tempP
+          .getElementsByClassName("profileRightContainer")[0]
+          .querySelector("#removeProfileBarButton")
+          .classList.add("rightProfileButtonsRemoveDisable");
+        //}
+      }
+
+      lockB.querySelector("#unlockIcon").style.display = "block";
+      lockB.querySelector("#lockIcon").style.display = "none";
+
+      lockB = removeAllEventListeners(lockB);
+      handleLockListeners();
+    });
+  }
 }
 
 function triggerOntopEvents() {
@@ -434,9 +592,9 @@ function triggerOntopEvents() {
     const account = await pullStorage("account");
     if (account.length !== 0) {
       flipPopupToSignedIn(account[0]);
-    }else{
+    } else {
       flipPopupToLoggedOff();
-    } 
+    }
 
     document.getElementById("accountContainer").style.display = "flex";
     document.getElementById("sessionContainer").style.display = "flex";
@@ -451,6 +609,15 @@ function triggerOntopEvents() {
       "none";
     document.getElementById("eventTopNewPasswordContainer").style.display =
       "none";
+
+    let nameI = document.getElementById("sessionNameInput");
+    nameI.value = "";
+    nameI.disabled = "";
+    nameI.style.boxShadow = "0px 5px 14px rgba(0, 0, 0, 0.3)";
+    nameI.style.color = "#fff";
+    document.getElementById("sessionPasswwordInput").value = "";
+    document.getElementById("sessionNewPasswwordInput").value = "";
+    document.getElementById("sessionReNewPasswwordInput").value = "";
   });
 }
 
@@ -460,7 +627,9 @@ function handleProfileCreation() {
   document.getElementById("eventTopReNewPasswordContainer").style.display =
     "flex";
 
-  document.getElementById("pageTitleProfile").textContent = "Create Profile";
+  document.getElementById("pageTitleProfile").textContent = "Create Session";
+  document.getElementById("eventTopText").textContent = "";
+
   let backB = document.getElementById("goBackSessionArrow");
   let rightB = document.getElementById("redButtonAnch");
 
@@ -474,9 +643,9 @@ function handleProfileCreation() {
     event.preventDefault();
     console.log("majde it?");
     if (sessPass.value === sessReNewPass.value) {
-      let id=generateUUID();
+      let id = generateUUID();
       const newp = {
-        id:id,
+        id: id,
         isActive: false,
         name: sessName.value,
         password: sessPass.value,
@@ -491,30 +660,31 @@ function handleProfileCreation() {
       });
       const sessionBox = document.getElementById("actualSessionContainer");
       let item = document.createElement("profile-item");
-      const addb = document.createElement("addprofile-item");
+      //const addb = document.createElement("addprofile-item");
       let selector;
-      console.log('the new profile creation-------------------',newp);
+      console.log("the new profile creation-------------------", newp);
 
       await pushStorage("profiles", newp);
 
-      sessionBox.removeChild(sessionBox.lastElementChild);
+      //sessionBox.removeChild(sessionBox.lastElementChild);
       sessionBox.appendChild(item);
       selector = item.shadowRoot.childNodes[3].getElementsByClassName(
-        "profileLeftContainer")[0];
+        "profileLeftContainer"
+      )[0];
       selector.querySelector(".SessionName").textContent = sessName.value;
 
       console.log("majde it?x2");
-      console.log('leng '+(sessionBox.children.length - 1));
+      console.log("leng " + (sessionBox.children.length - 1));
 
-      await attatchListerners(item.shadowRoot.childNodes[3],2,(id));
-      sessionBox.appendChild(addb);
-      await attatchListerners(addb.shadowRoot.childNodes[3], 0, -1);
+      await attatchListerners(item.shadowRoot.childNodes[3], 2, id);
+      //sessionBox.appendChild(addb);
+      //await attatchListerners(addb.shadowRoot.childNodes[3], 0, -1);
 
       item.shadowRoot.childNodes[3].dispatchEvent(clickEvent);
-      console.log('nooooooooooooooooooooooooo')
+      console.log("nooooooooooooooooooooooooo");
+      document.getElementById("actualSessionContainer").style.marginLeft =
+        "1.3rem";
       backB.dispatchEvent(clickEvent);
-
-
     }
   });
 }
@@ -527,7 +697,9 @@ async function handleProfileEditing(j) {
   document.getElementById("eventTopReNewPasswordContainer").style.display =
     "flex";
 
-  document.getElementById("pageTitleProfile").textContent = "Edit Profile";
+  document.getElementById("pageTitleProfile").textContent = "Edit Session";
+  document.getElementById("eventTopText").textContent = "";
+
   let backB = document.getElementById("goBackSessionArrow");
   let rightB = document.getElementById("redButtonAnch");
 
@@ -537,10 +709,10 @@ async function handleProfileEditing(j) {
   let sessReNewPass = document.getElementById("sessionReNewPasswwordInput");
   let profiles = await pullStorage("profiles");
 
-  let selected=null;
-  for(let i=0;i<profiles.length;i++){
-    if(profiles[i].id === j){
-      selected=i;
+  let selected = null;
+  for (let i = 0; i < profiles.length; i++) {
+    if (profiles[i].id === j) {
+      selected = i;
       break;
     }
   }
@@ -549,7 +721,9 @@ async function handleProfileEditing(j) {
   rightB = removeAllEventListeners(rightB);
   rightB.addEventListener("click", async function (event) {
     event.preventDefault();
-    console.log("ppas " + profiles[selected].password + selected + profiles[selected]);
+    console.log(
+      "ppas " + profiles[selected].password + selected + profiles[selected]
+    );
     if (
       profiles[selected].password === sessPass.value &&
       sessNewPass.value === sessReNewPass.value
@@ -558,7 +732,7 @@ async function handleProfileEditing(j) {
       if (sessNewPass.value !== "") {
         profiles[selected].password = sessNewPass.value;
       }
-      console.log('the profile editting-------------------',profiles);
+      console.log("the profile editting-------------------", profiles);
       await removeStorage("profiles");
       await pushStorage("profiles", profiles);
 
@@ -572,7 +746,7 @@ async function handleProfileEditing(j) {
         cancelable: true,
       });
 
-      const acc= await pullStorage("account");
+      const acc = await pullStorage("account");
       if (acc.length !== 0) {
         await uploadToGoogle();
       }
@@ -582,14 +756,14 @@ async function handleProfileEditing(j) {
 }
 
 async function handleProfileDeletion(j) {
-  let deletionFlag=0;
+  let deletionFlag = 0;
   let backB = document.getElementById("goBackSessionArrow");
   let profiles = await pullStorage("profiles");
 
-  let selected=null;
-  for(let i=0;i<profiles.length;i++){
-    if(profiles[i].id === j){
-      selected=i;
+  let selected = null;
+  for (let i = 0; i < profiles.length; i++) {
+    if (profiles[i].id === j) {
+      selected = i;
       break;
     }
   }
@@ -601,101 +775,98 @@ async function handleProfileDeletion(j) {
   });
 
   if (profiles[selected].isActive) {
-    deletionFlag=1;
-
+    deletionFlag = 1;
   }
 
-  
-  console.log('lenbefore ', profiles.length);
+  console.log("lenbefore ", profiles.length);
   //console.dir(j);
   //console.dir(profiles);
   //profiles = profiles.filter(item => item.id !== j);
 
   profiles.splice(selected, 1);
-  console.log('lenbefore ', profiles.length);
+  console.log("lenbefore ", profiles.length);
   await removeStorage("profiles");
-  console.log('backlog-------------------');
+  console.log("backlog-------------------");
   await pushStorage("profiles", profiles);
-  console.log('special ',await pullStorage("profiles"));
+  console.log("special ", await pullStorage("profiles"));
   sessionBox.removeChild(sessionBox.children[selected]);
 
-  if (deletionFlag===1) {
+  if (deletionFlag === 1) {
     sessionBox.children[0].shadowRoot.childNodes[3].dispatchEvent(clickEvent);
-  }else{
-    const acc= await pullStorage("account");
+  } else {
+    const acc = await pullStorage("account");
     if (acc.length !== 0) {
       await uploadToGoogle();
     }
   }
-
+  if (profiles.length === 1) {
+    document.getElementById("actualSessionContainer").style.marginLeft =
+      "0.9rem";
+  }
   backB.dispatchEvent(clickEvent);
-
 }
-
-
 
 async function restoreProfile(j) {
   let profs = await pullStorage("profiles");
-  let selected=null;
-  let old=null;
-  for(let i=0;i<profs.length;i++){
-    if(profs[i].id === j){
-      selected=i;
+  let selected = null;
+  let old = null;
+  for (let i = 0; i < profs.length; i++) {
+    if (profs[i].id === j) {
+      selected = i;
     }
-    if(profs[i].id === lastClicked2){
-      old=i;
+    if (profs[i].id === lastClicked2) {
+      old = i;
     }
-    if(selected !== null && old !== null){
+    if (selected !== null && old !== null) {
       break;
     }
   }
-  if(selected!==null){
+  if (selected !== null) {
     await removeStorage("swhitelist");
     await removeStorage("whitelist");
     await removeStorage("preferences");
     await removeStorage("customs");
     await removeStorage("sitepolicy");
     await removeStorage("profiles");
-  
+
     await pushStorage("whitelist", profs[selected].whitelist);
     await pushStorage("preferences", profs[selected].preferences);
     await pushStorage("customs", profs[selected].customs);
     //await pushStorage('whitelist', profs[j].whitelist);
-  
-    if(old !== null){
+
+    if (old !== null) {
       profs[old].isActive = false;
-    }else{
+    } else {
       profs[0].isActive = false;
     }
 
     profs[selected].isActive = true;
-    console.log('the profile restoring-------------------',profs);
+    console.log("the profile restoring-------------------", profs);
     await pushStorage("profiles", profs);
     await updateRules();
-}
-
+  }
 }
 
 async function makeProfileSelected(j) {
-  console.log('jj ',j);
+  console.log("jj ", j);
   let profs = await pullStorage("profiles");
-  console.log('jasdx ',profs);
-  let selected=null;
-  let old=null;
-  
-  for(let i=0;i<profs.length;i++){
-    if(profs[i].id === j){
-      selected=i;
+  console.log("jasdx ", profs);
+  let selected = null;
+  let old = null;
+
+  for (let i = 0; i < profs.length; i++) {
+    if (profs[i].id === j) {
+      selected = i;
     }
-    if(profs[i].id === lastClicked2){
-      old=i;
+    if (profs[i].id === lastClicked2) {
+      old = i;
     }
-    if(selected !== null && old !== null){
+    if (selected !== null && old !== null) {
       break;
     }
   }
 
-  console.log('backdoor '+selected);
+  console.log("backdoor " + selected);
   const profiles = document.getElementsByTagName("profile-item");
   const selectedProfile = profiles[selected].shadowRoot.childNodes[3];
   let oldItem;
@@ -707,11 +878,11 @@ async function makeProfileSelected(j) {
       .getElementsByClassName("profileLeftContainer")[0]
       .querySelector("#checkProfileBar").style.visibility = "hidden";
     oldItem.style.cursor = "pointer";
-    oldItem.pointerEvents = "auto";
+    oldItem.style.pointerEvents = "auto";
   }
 
   selectedProfile.style.cursor = "default";
-  selectedProfile.pointerEvents = "none";
+  selectedProfile.style.pointerEvents = "none";
   selectedProfile.style.border = "1px solid #3791E0";
   selectedProfile
     .getElementsByClassName("profileLeftContainer")[0]
@@ -724,7 +895,7 @@ async function makeProfileSelected(j) {
 function defineProfileItems() {
   if (!customElements.get("profile-item")) {
     customElements.define("profile-item", profileItem);
-    customElements.define("addprofile-item", addProfileItem);
+    //customElements.define("addprofile-item", addProfileItem);
   }
 }
 
@@ -741,13 +912,13 @@ class profileItem extends HTMLElement {
     display: flex;
     justify-content: space-between;
     background-color: #232325;
-    width: 16rem;
+    width: 17.6rem;
     height: 2.8rem;
     align-items: center;
     border-radius: 14px;
     border: 1px solid #ffffff08;
     box-shadow: 0px 5px 14px rgba(0, 0, 0, 0.5);
-    margin-bottom: 10px;
+    margin-bottom: 0.8rem;
 
 }
 .profileLeftContainer{
@@ -761,6 +932,26 @@ class profileItem extends HTMLElement {
 .profileRightContainer{
     display: flex;
     margin-right: 10px;
+}
+
+#makeBarDisabled{
+    cursor: auto;
+    border: none;
+    box-shadow: 0px 5px 14px rgba(0, 0, 0, 0.2);
+}
+#DisabledSessionName{
+    color: #5f5f60;
+}
+.leftProfileButtonsCheckDisable path{
+    fill:#3ea6ff50;
+}
+
+.rightProfileButtonsEditDisable path{
+    fill:#5f5f60
+}
+.rightProfileButtonsRemoveDisable path{
+    stroke:#5e2c2e;
+    fill:#5e2c2e;
 }
             </style>
             <div class="profileBarContainer">
@@ -776,7 +967,7 @@ class profileItem extends HTMLElement {
                             </div>
                         </div>
                         <div class="profileRightContainer">
-                            <svg id="editProfileBarButton" style="width: 18px;height:18px; margin-right:10px" width="256" height="256" viewBox="0 0 256 256" fill="none"
+                            <svg id="editProfileBarButton" style=" width: 18px;height:18px; margin-right:10px" width="256" height="256" viewBox="0 0 256 256" fill="none"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path
                                     d="M194.069 29.6394L226.473 62.0035L65.7055 222.576C62.2618 226.015 56.6786 226.015 53.235 222.576L33.302 202.667C29.8583 199.227 29.8583 193.651 33.3019 190.211L194.069 29.6394Z"
@@ -805,57 +996,6 @@ class profileItem extends HTMLElement {
                                     d="M18.4013 58.3075L3.79444 51.7775L18.4013 58.3075ZM17.0471 98.7797L1.08926 99.9407L17.0471 98.7797ZM34.228 41.2875L41.8007 55.3819L41.8007 55.3819L34.228 41.2875ZM188.91 41.2875L181.337 55.3819L181.337 55.3819L188.91 41.2875ZM204.736 58.3075L190.129 64.8375L190.129 64.8375L204.736 58.3075ZM206.09 98.7797L222.048 99.9408L222.048 99.9408L206.09 98.7797ZM198.538 202.58L182.58 201.419L182.538 201.998V202.58H198.538ZM198.538 202.58L214.496 203.741L214.538 203.161V202.58H198.538ZM192.38 237.953L178.511 229.974L178.511 229.974L192.38 237.953ZM176.817 252.425L183.768 266.836L183.768 266.836L176.817 252.425ZM56.9338 255.647L54.6992 271.49L54.6992 271.49L56.9338 255.647ZM26.7735 227.601L42.4128 224.223L42.4128 224.223L26.7735 227.601ZM25.6023 216.367L9.64451 217.528L25.6023 216.367ZM3.79444 51.7775C0.669503 58.7676 -0.164093 66.0115 -0.24697 73.4152C-0.327894 80.6445 0.328139 89.4795 1.08926 99.9407L33.0049 97.6186C32.2041 86.6118 31.6887 79.3456 31.751 73.7734C31.8114 68.3755 32.4359 66.1174 33.0081 64.8375L3.79444 51.7775ZM26.6553 27.193C16.5265 32.635 8.4871 41.2806 3.79444 51.7775L33.0081 64.8375C34.8129 60.8002 37.905 57.475 41.8007 55.3819L26.6553 27.193ZM74.4952 21C64.0063 21 55.147 20.9868 47.9426 21.5921C40.5645 22.212 33.4002 23.5691 26.6553 27.193L41.8007 55.3819C43.0357 54.7184 45.2426 53.9317 50.6218 53.4798C56.1748 53.0132 63.4592 53 74.4952 53V21ZM148.642 21H74.4952V53H148.642V21ZM196.482 27.193C189.737 23.5691 182.573 22.212 175.195 21.5921C167.991 20.9868 159.131 21 148.642 21V53C159.678 53 166.963 53.0132 172.516 53.4798C177.895 53.9317 180.102 54.7184 181.337 55.3819L196.482 27.193ZM219.343 51.7775C214.65 41.2806 206.611 32.635 196.482 27.193L181.337 55.3819C185.233 57.475 188.325 60.8002 190.129 64.8375L219.343 51.7775ZM222.048 99.9408C222.809 89.4795 223.465 80.6445 223.385 73.4152C223.302 66.0115 222.468 58.7676 219.343 51.7775L190.129 64.8375C190.702 66.1174 191.326 68.3755 191.387 73.7734C191.449 79.3456 190.933 86.6118 190.133 97.6187L222.048 99.9408ZM214.496 203.741L222.048 99.9408L190.133 97.6187L182.58 201.419L214.496 203.741ZM214.538 202.58V202.58H182.538V202.58H214.538ZM206.249 245.932C209.689 239.951 211.298 233.631 212.301 227.068C213.274 220.699 213.83 212.901 214.496 203.741L182.58 201.419C181.877 211.085 181.406 217.407 180.668 222.235C179.96 226.868 179.174 228.822 178.511 229.974L206.249 245.932ZM183.768 266.836C193.195 262.289 201.029 255.003 206.249 245.931L178.511 229.974C176.504 233.463 173.491 236.265 169.865 238.014L183.768 266.836ZM141.09 272C150.274 272 158.092 272.012 164.515 271.503C171.134 270.979 177.553 269.834 183.768 266.836L169.865 238.014C168.668 238.591 166.663 239.233 161.99 239.603C157.122 239.988 150.782 240 141.09 240V272ZM124.508 272H141.09V240H124.508V272ZM96.366 272H124.508V240H96.366V272ZM68.2239 272H96.366V240H68.2239V272ZM54.6992 271.49C58.5901 272.039 62.8967 272 68.2239 272V240C61.8332 240 60.2807 239.961 59.1685 239.804L54.6992 271.49ZM11.1343 230.98C15.7348 252.277 33.1246 268.447 54.6992 271.49L59.1685 239.804C50.8706 238.634 44.1822 232.414 42.4128 224.223L11.1343 230.98ZM9.64451 217.528C10.0311 222.841 10.3045 227.139 11.1343 230.98L42.4128 224.223C42.1756 223.125 42.0239 221.58 41.5601 215.206L9.64451 217.528ZM1.08926 99.9407L9.64451 217.528L41.5601 215.206L33.0049 97.6186L1.08926 99.9407ZM120.575 183C120.575 196.255 131.32 207 144.575 207V175C148.993 175 152.575 178.582 152.575 183H120.575ZM120.575 110V183H152.575V110H120.575ZM144.575 86C131.32 86 120.575 96.7452 120.575 110H152.575C152.575 114.418 148.993 118 144.575 118V86ZM168.575 110C168.575 96.7452 157.829 86 144.575 86V118C140.156 118 136.575 114.418 136.575 110H168.575ZM168.575 183V110H136.575V183H168.575ZM144.575 207C157.829 207 168.575 196.255 168.575 183H136.575C136.575 178.582 140.156 175 144.575 175V207ZM78.5635 175C82.9818 175 86.5635 178.582 86.5635 183H54.5635C54.5635 196.255 65.3086 207 78.5635 207V175ZM70.5635 183C70.5635 178.582 74.1452 175 78.5635 175V207C91.8183 207 102.563 196.255 102.563 183H70.5635ZM70.5635 110V183H102.563V110H70.5635ZM78.5635 118C74.1452 118 70.5635 114.418 70.5635 110H102.563C102.563 96.7452 91.8183 86 78.5635 86V118ZM86.5635 110C86.5635 114.418 82.9817 118 78.5635 118V86C65.3086 86 54.5635 96.7452 54.5635 110H86.5635ZM86.5635 183V110H54.5635V183H86.5635Z"
                                     fill="#DB3F42" mask="url(#path-3-inside-1_430_54)" />
                             </svg>
-                        </div>
-                    </div>
-        `;
-  }
-}
-
-class addProfileItem extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-  }
-
-  connectedCallback() {
-    this.shadowRoot.innerHTML = `
-            <style>
-.profileBarContainer{
-    display: flex;
-    justify-content: space-between;
-    background-color: #232325;
-    width: 16rem;
-    height: 2.8rem;
-    align-items: center;
-    border-radius: 14px;
-    border: 1px solid #ffffff08;
-    box-shadow: 0px 5px 14px rgba(0, 0, 0, 0.5);
-    margin-bottom: 10px;
-
-}
-.profileLeftContainer{
-    display: flex;
-    color: white;
-    font-size: 1.1rem;
-    margin-left: 4%;
-    align-items:flex-end;
-
-}
-.profileRightContainer{
-    display: flex;
-    margin-right: 10px;
-}
-            </style>
-                    <div class="profileBarContainer" id="addSessionBar">
-                        <div class="profileLeftContainer">
-                            <svg style="width: 18px;height:18px; margin-bottom: 2px;" width="7" height="7" viewBox="0 0 7 7" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M3.5 6L3.5 1" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
-                                <path d="M1 3.5H6" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
-                                </svg>
-
-                            <div class="SessionName" style="margin-left: 10px;">
-                                Add Session
-                            </div>
                         </div>
                     </div>
         `;

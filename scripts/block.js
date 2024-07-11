@@ -42,8 +42,8 @@ async function modifyPage(sitePolicy) {
         sitePolicy.policyAlignment,
         document.getElementsByClassName("theBodyOfBlockList1")[0]
       );
-      fillLists(
-        await pullStorage('preferences'),
+      let strg= await pullStorage('preferences');
+      fillLists(strg,
         document.getElementsByClassName("theBodyOfBlockList2")[0]
       );
     }

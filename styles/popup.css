@@ -131,6 +131,7 @@ a.clicked .bottomBarChild{
 }
 #pageTitleProfile{
     margin-top: 20px;
+    font-size: 16px;
 }
 
 #accountContainer{
@@ -144,15 +145,16 @@ a.clicked .bottomBarChild{
     color: white;
 }
 #actualSessionContainer{
-    width: 100%;
+    width: 92%;
     height: 100%;
-    margin-bottom: 5%;
+    margin-bottom: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
     overflow-y:auto;
     overflow-x: hidden;
+    margin-left: 1.3rem;
 }
 
 #actualSessionContainer::-webkit-scrollbar {
@@ -175,9 +177,10 @@ a.clicked .bottomBarChild{
 
 #sessionContainer{
     display: flex;
-    width: 82%;
+    width: 100%;
     height: 39%;
-    margin-bottom: 8%;
+    margin-bottom: 0;
+    flex-direction: column;
     justify-content: space-around;
 }
 
@@ -185,10 +188,11 @@ a.clicked .bottomBarChild{
     width: 78%;
     height: 80%;
     justify-content: flex-start;
-    align-items: center;
+    align-items: flex-start;
     font-size: 1rem;
     flex-direction: column;
     color: white;
+    margin-bottom: 2rem;
 }
 
 #accountTripleContainer{
@@ -228,4 +232,96 @@ a.clicked .bottomBarChild{
     padding-top: 4px;
     padding-bottom: 4px;
     cursor: pointer;
+}
+
+#popupSessionLockButton{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #232325;
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 14px;
+    border: 1px solid #ffffff08;
+    box-shadow: 0px 5px 14px rgba(0, 0, 0, 0.5);
+    margin-bottom: 0.8rem;
+    margin-left: 0.8rem;
+    cursor: pointer;
+}
+
+#defaultSessionContainer{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+
+.addSessionBar{
+    display: flex;
+    justify-content: space-between;
+    background-color: #232325;
+    width: 13.9rem;
+    height: 2.8rem;
+    align-items: center;
+    border-radius: 14px;
+    border: 1px solid #ffffff08;
+    box-shadow: 0px 5px 14px rgba(0, 0, 0, 0.5);
+    margin-bottom: 0.8rem;
+    margin-left: 0;
+    cursor: pointer;
+}
+.profileLeftContainer{
+    display: flex;
+    color: white;
+    font-size: 1.1rem;
+    margin-left: 4%;
+    align-items:flex-end;
+
+}
+.profileRightContainer{
+    display: flex;
+    margin-right: 0.8rem;
+}
+
+#makeBarDisabled{
+    cursor: auto;
+    border: none;
+    box-shadow: 0px 5px 14px rgba(0, 0, 0, 0.2);
+}
+#DisabledSessionName{
+    color: #5f5f60;
+}
+#addSessionPlusSign path{
+    stroke: #5f5f60;
+}
+
+.popupInputContainers{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.popupInputs{
+    height: 1.8rem;
+    border-radius: 8px;
+    outline: none;
+    border: 1px solid #ffffff08;
+    background-color: #232325;
+    color: white;
+    margin-top: 0.4rem;
+    width: 98%;
+    box-shadow: 0px 5px 14px rgba(0, 0, 0, 0.3);
+    padding-left: 8px;
+    font-size: 14px;
+}
+
+#eventTopText{
+    display: flex;
+    text-align: center;
+}
+
+.popupLabels{
+    font-size: 14px;
 }

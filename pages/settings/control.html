@@ -1,1 +1,35 @@
-<div>parental</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../styles/parentalControl.css">
+    <title>Parental Control</title>
+</head>
+<body>
+    <div id="parentalControlContainer">
+        <div id="settingsControlTopBar" >
+            <div id="settingsControlTopBarText">
+                Youtube Channel Selection
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="toggleSwitch">
+                <span class="slider"></span>
+            </label>
+
+        </div>
+        <div id="innerControlContainer">
+            <div id="controlYtContainer">
+                <label for="controlYtInput" class="controlYtLabel">
+                    Youtube Channel Url
+                </label>
+                <input type="text" id="controlYtInput">
+            </div>
+            <div id="controlBottomButtonContainer">
+                <button id="saveYtButton">select</button>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

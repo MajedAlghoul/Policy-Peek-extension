@@ -466,29 +466,59 @@ export async function removeSpecificSitePolicyStorage(item) {
 }
 //===========================================================================================================
 export async function makeRequest(wurl) {
+  let tempurl="https://www.youtube.com"
   const url = "https://api.example.com/data";
 
-  let prefs = await pullPreferencesStorage();
+  let prefs = await pullStorage('preferences');
 
   const data = {
-    url: wurl,
+    url: tempurl,
     preferences: prefs,
   };
-  /*
-    try {
-        const response = await axios.post(url, data, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+// Create the request payload
+const requestData = {
+  url: 'https://www.youtube.com',
+  preferences: ['Survey Data', 'Computer Information', 'User Profile','IP and Device ID','Online Activity','Service Provision','Legal Requirement','Service Improvement', 'Limited','Specified Period']
+};
+// Use the function to make the request
+makeApiRequest(requestData).then(responseData => {
+  if (responseData) {
+    // Handle the response data here
+    console.log('Match:', responseData.match);
+    console.log('Policy Analysis:', responseData.policyAnalysis);
+    console.log('Policy Alignment:', responseData.policyAlignment);
+    console.log('Policy Link:', responseData.policyLink);
+    console.log('Site Rank:', responseData.siteRank);
+    console.log('Last Updated:', responseData.lastUpdated);
+  }
+});
+// Function to make the API request
 
-        console.log(response.data);
-        return response;
-    } catch (error) {
-        console.error('There was a problem with the axios operation:', error);
-    }*/
   return null;
 }
+
+async function makeApiRequest(data) {
+  try {
+    const response = await fetch('http://localhost:3000/api/endpoint', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    return responseData;
+  } catch (error) {
+    console.error('Error making API request:', error);
+  }
+}
+
+
 //===========================================================================================================
 export function setListEmpty(h, b, e) {
   h.style.display = "none";

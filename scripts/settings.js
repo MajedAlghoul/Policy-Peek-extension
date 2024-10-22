@@ -14,7 +14,7 @@ for (let i = 0; i < listItems.length; i++) {
   listItems[i].addEventListener("click", function (event) {
     event.preventDefault();
 
-    if (!lockStatus) {
+    if (lockStatus) {
         let authFile = "settings/authenticate.html";
         fetch(authFile)
         .then((response) => response.text())
